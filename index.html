@@ -669,31 +669,50 @@ async function cloudDelete(id){
   try{ await sb.from('leads').delete().eq('id',id); }
   catch(e){ console.warn('cloudDelete failed',e); }
 }
-/* Push many leads at once (imports + first-time migration). */
+/* Demo/sample leads (names end in ".sample") must NEVER live in the cloud. */
+function isSampleLead(l){return !!(l && /\.sample$/i.test(l.name||''));}
+/* Push many leads at once (imports + migration). Sample/demo rows are stripped. */
 async function cloudBulk(arr){
-  if(!CLOUD||!cloudUser||!arr||!arr.length)return;
-  try{ await sb.from('leads').upsert(arr.map(l=>({id:l.id,data:l,owner:cloudUser.id,updated_at:new Date().toISOString()})),{onConflict:'id'}); }
+  if(!CLOUD||!cloudUser||!arr)return;
+  const clean=arr.filter(l=>l && !isSampleLead(l));
+  if(!clean.length)return;
+  try{ await sb.from('leads').upsert(clean.map(l=>({id:l.id,data:l,owner:cloudUser.id,updated_at:new Date().toISOString()})),{onConflict:'id'}); }
   catch(e){ console.warn('cloudBulk failed',e); }
 }
-/* Pull the full lead list down from the cloud and render. On the very first
-   load, if the cloud is empty but this browser has leads, migrate them up. */
+/* Pull the full lead list down and render. Self-healing:
+   - any sample/demo rows found in the cloud are deleted (cleanup of old pollution);
+   - if the cloud has real leads, they are the source of truth;
+   - if the cloud has NO real leads but THIS device does, push them up (recovers a
+     device whose data never made it to the cloud). */
 const MIGRATED_KEY='elevateAngelMigrated_v1';
 async function cloudLoad(){
   if(!CLOUD||!cloudUser)return;
   try{
     const {data,error}=await sb.from('leads').select('id,data').order('updated_at',{ascending:false});
     if(error)throw error;
-    const rows=(data||[]).map(r=>r.data).filter(Boolean);
-    if(!rows.length && leads.length && !lsGet(MIGRATED_KEY)){
-      await cloudBulk(leads);          // one-time: move existing local leads up
-      lsSet(MIGRATED_KEY,'1');
+    let rows=(data||[]).map(r=>r.data).filter(Boolean);
+    const junk=rows.filter(isSampleLead);
+    if(junk.length){ junk.forEach(j=>cloudDelete(j.id)); rows=rows.filter(l=>!isSampleLead(l)); }
+    if(rows.length){
+      leads=rows;                                        // cloud has real data → source of truth
     }else{
-      leads=rows;                       // cloud is the source of truth
-      lsSet(MIGRATED_KEY,'1');
+      const localReal=(leads||[]).filter(l=>!isSampleLead(l));
+      if(localReal.length){ await cloudBulk(localReal); leads=localReal; }  // self-heal: push this device up
+      else { leads=[]; }
     }
+    lsSet(MIGRATED_KEY,'1');
     cloudReady=true;
     save(); render();
   }catch(e){ console.warn('cloudLoad failed — staying on local cache',e); }
+}
+/* Manual recovery: force-push this device's real leads to the cloud. */
+async function syncLocalToCloud(){
+  if(!CLOUD||!cloudUser)return;
+  const localReal=(leads||[]).filter(l=>!isSampleLead(l));
+  if(!localReal.length){ alert('No real leads on this device to sync.'); return; }
+  await cloudBulk(localReal);
+  alert('Pushed '+localReal.length+' lead'+(localReal.length===1?'':'s')+' to the cloud.');
+  cloudLoad();
 }
 /* Live updates: refetch (debounced) whenever any device changes the table. */
 let _rtTimer=null;
@@ -759,7 +778,7 @@ const QUICK_FOLLOWUP_DAYS=3;
 function addDays(iso,n){const d=new Date(iso+'T00:00:00');d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
 function relTime(iso){if(!iso)return 'just now';const s=(Date.now()-new Date(iso))/1000;if(s<60)return 'just now';if(s<3600)return Math.floor(s/60)+' min ago';if(s<86400)return Math.floor(s/3600)+' hr ago';return new Date(iso).toLocaleDateString();}
 function updateStatus(){const el=document.getElementById('saveStatus');if(!el)return;
-  if(CLOUD&&cloudUser){el.innerHTML='☁️ <b>'+leads.length+'</b> lead'+(leads.length===1?'':'s')+' synced to cloud · '+esc(cloudUser.email||'signed in')+' · <button class="signout" onclick="doSignOut()">Sign out</button>';return;}
+  if(CLOUD&&cloudUser){el.innerHTML='☁️ <b>'+leads.length+'</b> lead'+(leads.length===1?'':'s')+' synced to cloud · '+esc(cloudUser.email||'signed in')+' · <button class="signout" onclick="syncLocalToCloud()">Sync this device</button> · <button class="signout" onclick="doSignOut()">Sign out</button>';return;}
   if(CLOUD&&!cloudUser){el.innerHTML='☁️ Cloud mode — sign in to sync.';return;}
   if(!STORAGE_OK){el.innerHTML='⚠ <b>'+leads.length+'</b> lead'+(leads.length===1?'':'s')+' — this browser is blocking storage (file:// or Private Mode), so changes last for this session only. Open over http(s) / add to Home Screen, or use ↓ Backup to keep your data.';return;}
   el.innerHTML='💾 <b>'+leads.length+'</b> lead'+(leads.length===1?'':'s')+' saved to this browser · last updated '+relTime(lsGet(LASTSAVED_KEY));}
@@ -1648,7 +1667,7 @@ function seed(){
    Wrapped so a single failure (e.g. iOS storage SecurityError) can never leave
    the page in a broken, tab-less state. Each step is independently guarded. */
 function boot(){
-  try{ if(!lsGet(KEY)){seed();} }catch(e){}
+  try{ if(!CLOUD && !lsGet(KEY)){seed();} }catch(e){}
 
   try{ document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal();}); }catch(e){}
 
