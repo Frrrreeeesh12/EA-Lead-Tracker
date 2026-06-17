@@ -1,0 +1,1681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
+<title>Elevate Angel — Lead Tracker</title>
+<!-- PWA / install-to-home-screen -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0C0C0D">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="EA Tracker">
+<meta name="application-name" content="EA Tracker">
+<link rel="apple-touch-icon" href="ea-icon-192.png">
+<link rel="icon" type="image/png" href="ea-icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Elevate Angel brand palette */
+    --bg:#0C0C0D; --panel:#1A1B1D; --panel2:#2A2B2E; --line:#2E3033;
+    --txt:#F2F5F6; --muted:#9EA4A6; --accent:#28BAC6; --accent2:#157A7A;
+    --hi:#34D399; --med:#FBBF24; --lo:#F87171;
+    --good:#28BAC6; --warn:#D9A441; --bad:#E0766B;
+    --serif:"Playfair Display",Georgia,"Times New Roman",serif;
+    --sans:"Inter","Helvetica Neue",Arial,sans-serif;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.5 var(--sans)}
+  h1,h2,h3{margin:0;font-weight:600}
+  h1,h2{font-family:var(--serif);letter-spacing:.2px}
+  a{color:var(--accent)}
+  button{font:inherit;font-weight:500;cursor:pointer;border:none;border-radius:9px;padding:8px 14px;color:#fff;background:var(--accent2);text-transform:uppercase}
+  button.ghost{background:transparent;border:1px solid var(--line);color:var(--txt)}
+  button.sm{padding:5px 10px;font-size:12px}
+  button:hover{filter:brightness(1.12)}
+  input,select,textarea{font:inherit;background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:9px;padding:8px 10px;width:100%}
+  textarea{resize:vertical;min-height:60px}
+  label{display:block;font-size:12px;color:var(--muted);margin:0 0 4px}
+  .wrap{max-width:1180px;margin:0 auto;padding:18px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+  .brand{display:flex;align-items:center;gap:13px}
+  .brand .logo{width:48px;height:48px;border-radius:10px;overflow:hidden;background:#000;border:1px solid var(--line);display:flex;align-items:center;justify-content:center}
+  .brand .logo img{width:100%;height:100%;object-fit:cover}
+  .brand h1{font-size:22px}
+  .brand small{color:var(--accent);display:block;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:2.4px;margin:0 0 3px;font-family:var(--sans)}
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  /* pipeline */
+  .pipeline{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .pill{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:12px;color:var(--muted)}
+  .pill b{color:var(--txt);font-size:14px}
+  /* stat cards */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px}
+  .stat .n{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--txt)}
+  .stat .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  /* controls */
+  .controls{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+  .controls .full{grid-column:1/-1}
+  .controls .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  /* followups banner */
+  .banner{background:linear-gradient(90deg,rgba(40,186,198,.14),rgba(21,122,122,.07));border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px;margin-bottom:14px;font-size:13px}
+  .banner b{color:var(--accent)}
+  /* target zone */
+  .zone{background:linear-gradient(90deg,rgba(40,186,198,.10),rgba(21,122,122,.05));border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;margin-bottom:14px}
+  .zonehead{font-size:14px;margin-bottom:9px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .zonehead .sum{color:var(--accent);font-size:12.5px;font-weight:500}
+  .zonerow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .zonerow select,.zonerow input{width:auto}
+  .zonerow input{width:120px}
+  /* save status + backup reminder */
+  .savebar{font-size:11.5px;color:var(--muted);margin:-4px 0 12px}
+  .savebar b{color:var(--good)}
+  .reminder{background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.4);border-radius:var(--radius);padding:10px 14px;margin-bottom:14px;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .reminder b{color:var(--warn)}
+  /* outreach memory bank */
+  .bankhead h2{font-size:20px}
+  .bankcols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:6px}
+  .bankcol-h{font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .bankcol-h.working{color:var(--hi)} .bankcol-h.notworking{color:var(--lo)}
+  .bankcol-h .muted{font-weight:400;font-size:12px}
+  .banklist{display:grid;gap:9px}
+  .bankitem{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 13px;border-left:3px solid var(--line)}
+  .bankitem.working{border-left-color:var(--hi)} .bankitem.notworking{border-left-color:var(--lo)}
+  .bankitem .bmsg{font-size:13px;color:var(--txt);white-space:pre-wrap;line-height:1.45}
+  .bankitem .bmeta{font-size:11px;color:var(--muted);margin-top:7px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .bankitem .bmeta .blead{color:var(--accent);font-weight:600}
+  .bankempty{color:var(--muted);font-size:13px;padding:18px;text-align:center;border:1px dashed var(--line);border-radius:12px}
+  @media(max-width:640px){.bankcols{grid-template-columns:1fr}}
+  /* daily DM target counter */
+  .daily{background:linear-gradient(90deg,rgba(40,186,198,.14),rgba(21,122,122,.06));border:1px solid var(--line);border-radius:var(--radius);padding:11px 15px;margin-bottom:14px;cursor:pointer;transition:filter .15s}
+  .daily:hover{filter:brightness(1.08)}
+  .dt-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .dt-count{font-family:var(--serif);font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--accent);line-height:1}
+  .dt-label{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+  .dt-track{height:8px;border-radius:6px;background:var(--panel2);overflow:hidden;margin-top:9px}
+  .dt-fill{height:100%;width:0;border-radius:6px;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width .35s ease}
+  .dt-note{font-size:11.5px;color:var(--muted);margin-top:6px;min-height:14px}
+  .daily.done{background:linear-gradient(90deg,rgba(52,211,153,.18),rgba(52,211,153,.05))}
+  .daily.done .dt-count{color:var(--hi)}
+  .daily.done .dt-fill{background:linear-gradient(90deg,var(--accent2),var(--hi))}
+  .daily.done .dt-note{color:var(--hi);font-weight:600}
+  /* cards */
+  .cards{display:grid;gap:10px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px;display:grid;grid-template-columns:54px 1fr auto;gap:14px;align-items:start}
+  .score{width:54px;height:54px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;font-size:18px;font-variant-numeric:tabular-nums}
+  .score small{font-size:9px;font-weight:600;opacity:.8}
+  .score.hi{background:rgba(52,211,153,.16);color:var(--hi)}
+  .score.med{background:rgba(251,191,36,.16);color:var(--med)}
+  .score.lo{background:rgba(248,113,113,.16);color:var(--lo)}
+  .cmain h3{font-size:16px}
+  .cmain .meta{color:var(--muted);font-size:12px;margin-top:2px;display:flex;gap:10px;flex-wrap:wrap}
+  .cmain .notes{margin-top:6px;font-size:12.5px;color:#c5cad6;font-style:italic}
+  .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .tag{font-size:11px;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+  .tag.pri-High{background:rgba(52,211,153,.16);color:var(--hi);border-color:transparent}
+  .tag.pri-Medium{background:rgba(251,191,36,.16);color:var(--med);border-color:transparent}
+  .tag.pri-Low{background:rgba(248,113,113,.16);color:var(--lo);border-color:transparent}
+  .tag.st{background:var(--panel2)}
+  .tag.dup{background:rgba(217,164,65,.18);color:var(--warn);border-color:transparent}
+  .btn-igdm{background:var(--accent);color:#0C0C0D;font-weight:700;white-space:nowrap}
+  .cside{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+  .cside select{width:auto;font-size:12px;padding:5px 8px}
+  .due{font-size:11px;color:var(--muted)}
+  .due.today{color:var(--warn);font-weight:600}
+  .due.over{color:var(--bad);font-weight:600}
+  /* details */
+  details.more{grid-column:1/-1;margin-top:4px}
+  details.more summary{cursor:pointer;color:var(--accent);font-size:12px;list-style:none}
+  details.more summary::-webkit-details-marker{display:none}
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+  .kv .k{font-size:11px;color:var(--muted)}
+  .kv .v{font-size:13px}
+  .detail-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  /* modal */
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-start;justify-content:center;padding:30px 14px;overflow:auto;z-index:50}
+  .modal-bg.open{display:flex}
+  .modal{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;max-width:720px;width:100%}
+  .modal h2{margin-bottom:14px}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .form-grid .full{grid-column:1/-1}
+  .modal-foot{display:flex;justify-content:space-between;gap:8px;margin-top:18px}
+  .fieldset{border:1px solid var(--line);border-radius:12px;padding:12px;grid-column:1/-1;margin-top:4px}
+  .fieldset legend{font-size:12px;color:var(--accent);padding:0 6px}
+  /* needs-enrichment tag */
+  .tag.enrich{background:rgba(248,113,113,.16);color:#fca5a5;border-color:transparent;box-shadow:0 0 0 1px rgba(248,113,113,.35),0 0 8px rgba(248,113,113,.45);animation:enrichGlow 1.8s ease-in-out infinite}
+  @keyframes enrichGlow{0%,100%{box-shadow:0 0 0 1px rgba(248,113,113,.30),0 0 6px rgba(248,113,113,.30)}50%{box-shadow:0 0 0 1px rgba(248,113,113,.55),0 0 13px rgba(248,113,113,.70)}}
+  @media (prefers-reduced-motion:reduce){.tag.enrich{animation:none}}
+  /* recommended-action label */
+  .recact{display:inline-flex;align-items:center;gap:7px;margin-top:9px;padding:5px 11px;border-radius:10px;font-size:12px;border:1px solid var(--line);background:var(--panel2)}
+  .recact .rk{font-size:9.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);font-weight:600}
+  .recact .rv{font-weight:700}
+  .recact .rwhy{font-size:11px;color:var(--muted);font-weight:400;font-style:italic}
+  .recact.act-skip{border-color:transparent;background:rgba(158,164,166,.14)} .recact.act-skip .rv{color:#b7bdbf}
+  .recact.act-quick{border-color:transparent;background:rgba(40,186,198,.10)} .recact.act-quick .rv{color:#7fcfd6}
+  .recact.act-review{border-color:transparent;background:rgba(251,191,36,.16)} .recact.act-review .rv{color:var(--med)}
+  .recact.act-enrich{border-color:transparent;background:rgba(40,186,198,.18)} .recact.act-enrich .rv{color:var(--accent)}
+  .recact.act-priority{border-color:transparent;background:rgba(52,211,153,.18)} .recact.act-priority .rv{color:var(--hi)}
+  /* quick add (mobile-first) */
+  .qa-modal{max-width:480px}
+  .qa .field{margin-bottom:14px}
+  .qa label{font-size:13px;margin-bottom:6px}
+  .qa input,.qa select,.qa textarea{font-size:16px;padding:12px}/* 16px stops iOS zoom-on-focus */
+  .qa textarea{min-height:54px}
+  .qa-opt{border:1px solid var(--line);border-radius:12px;padding:0 12px;margin-bottom:14px}
+  .qa-opt summary{cursor:pointer;color:var(--accent);font-size:13px;list-style:none;padding:11px 0}
+  .qa-opt summary::-webkit-details-marker{display:none}
+  .qa-opt[open] summary{border-bottom:1px solid var(--line);margin-bottom:12px}
+  .qa-foot{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+  .qa-foot button{padding:14px 16px;font-size:15px;width:100%}
+  .qa-foot .row2{display:flex;gap:8px}
+  .qa-foot .row2 button{flex:1}
+  .qa-msg{font-size:12.5px;color:var(--good);min-height:16px;text-align:center}
+  .btn-quick{background:var(--accent);color:#0C0C0D;font-weight:700}
+  /* analytics */
+  .analytics{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-top:18px}
+  .analytics table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
+  .analytics th,.analytics td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line)}
+  .analytics th{color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+  .bar{height:6px;border-radius:4px;background:var(--accent);display:inline-block;vertical-align:middle;margin-right:6px}
+  .anwrap{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .muted{color:var(--muted)}
+  .empty{text-align:center;color:var(--muted);padding:40px}
+  .scorebreak{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.7}
+  .hint{font-size:11px;color:var(--muted);margin-top:3px}
+  @media(max-width:640px){.form-grid,.anwrap{grid-template-columns:1fr}.card{grid-template-columns:48px 1fr}.cside{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:flex-start;flex-wrap:wrap;gap:8px}.cside .btn-igdm{order:-1;flex:1 0 100%}}
+
+  /* ============ tabs ============ */
+  .tabbar{display:flex;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:5px;margin-bottom:16px;position:sticky;top:0;z-index:30}
+  .tabbar button{flex:1;background:transparent;color:var(--muted);border-radius:10px;padding:11px 10px;font-size:14px;font-weight:600}
+  .tabbar button.active{background:var(--accent);color:#0C0C0D}
+  .tabpanel{display:none}
+  .tabpanel.active{display:block}
+
+  /* ============ segmented controls + chips (thumb-friendly) ============ */
+  .seg{display:flex;gap:6px;flex-wrap:wrap}
+  .seg button{flex:1;min-width:62px;background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:11px;padding:13px 8px;font-size:14px;font-weight:600}
+  .seg button.on{background:var(--accent);color:#0C0C0D;border-color:transparent}
+  .seg.tri button.on.yes{background:var(--hi);color:#06231a}
+  .seg.tri button.on.no{background:var(--lo);color:#2a0b0b}
+  .seg.q button.on.lo{background:var(--lo);color:#2a0b0b}
+  .seg.q button.on.med{background:var(--med);color:#332606}
+  .seg.q button.on.hi{background:var(--hi);color:#06231a}
+  .seg.pri button.on.High{background:var(--hi);color:#06231a}
+  .seg.pri button.on.Medium{background:var(--med);color:#332606}
+  .seg.pri button.on.Low{background:var(--lo);color:#2a0b0b}
+
+  /* ============ brand-potential slider ============ */
+  .brandrow{display:flex;align-items:center;gap:12px}
+  .brandrow input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:8px;border-radius:6px;background:linear-gradient(90deg,var(--accent2),var(--accent));padding:0;border:none}
+  .brandrow input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;border-radius:50%;background:var(--accent);border:3px solid var(--bg);cursor:pointer;box-shadow:0 0 0 1px var(--line)}
+  .brandrow input[type=range]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:var(--accent);border:3px solid var(--bg);cursor:pointer}
+  .brandrow .bval{min-width:46px;text-align:center;font-weight:700;font-size:20px;font-variant-numeric:tabular-nums;color:var(--accent)}
+
+  /* ============ inline quick-add panel ============ */
+  .qa-inline{max-width:620px;margin:0 auto}
+  .qa-inline .field{margin-bottom:16px}
+  .qa-inline label{font-size:13px;margin-bottom:7px;display:flex;align-items:center;gap:6px}
+  .qa-inline input,.qa-inline select,.qa-inline textarea{font-size:16px;padding:14px}/* 16px stops iOS zoom-on-focus */
+  .qa-inline textarea{min-height:64px}
+  .iglink{font-size:12px;color:var(--accent);margin-top:6px;word-break:break-all;min-height:14px}
+  .reqstar{color:var(--accent)}
+  .qa-actions{position:sticky;bottom:0;background:linear-gradient(180deg,rgba(12,12,13,0),var(--bg) 26%);padding:14px 0 8px;margin-top:8px;display:flex;flex-direction:column;gap:9px;z-index:20}
+  .qa-actions button{padding:16px;font-size:15px;width:100%;border-radius:12px}
+  .qa-actions .row2{display:flex;gap:9px}
+  .qa-actions .row2 button{flex:1}
+  /* cloud login gate */
+  .auth-bg{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;z-index:200}
+  .auth-card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px 22px;max-width:380px;width:100%}
+  .auth-brand small{color:var(--accent);display:block;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:2.4px;margin:0 0 4px}
+  .auth-brand h2{font-size:24px;margin:0 0 6px}
+  .auth-sub{color:var(--muted);font-size:13px;margin:0 0 18px}
+  .auth-card .field{margin-bottom:14px}
+  .auth-card input{font-size:16px;padding:12px}
+  .auth-msg{font-size:12.5px;min-height:18px;margin:0 0 10px;color:var(--lo)}
+  .auth-msg.ok{color:var(--good)}
+  .auth-alt{text-align:center;margin-top:14px;font-size:12.5px}
+  .auth-alt a{color:var(--accent)}
+  .signout{font-size:11.5px;color:var(--muted);cursor:pointer;background:none;border:none;padding:0;text-decoration:underline}
+  .btn-msg{background:var(--hi);color:#06231a;font-weight:700}
+  .btn-dm{background:var(--panel2);color:var(--txt);border:1px solid var(--accent)}
+  /* Save Only — black with white text, matching the app's dark, premium look */
+  .btn-saveonly{background:#000;color:#fff;font-weight:700;border:1px solid var(--line)}
+  /* Clear — black like Save Only, lighter weight to keep it visually secondary */
+  .btn-clear{background:#000;color:var(--txt);font-weight:500;border:1px solid var(--line)}
+  /* subtle on-brand glow on hover / tap — clean, not flashy */
+  .btn-glow{transition:box-shadow .18s ease, transform .06s ease}
+  .btn-glow:hover,.btn-glow:focus-visible{box-shadow:0 0 8px rgba(40,186,198,.22)}
+  .btn-glow:active{box-shadow:0 0 11px rgba(40,186,198,.34);transform:translateY(1px)}
+  @media (prefers-reduced-motion:reduce){.btn-glow{transition:none}.btn-glow:active{transform:none}}
+  .qa-inline-msg{font-size:13px;color:var(--good);min-height:18px;text-align:center;font-weight:600}
+
+  /* ============ recently added ============ */
+  .recent{margin-top:8px}
+  .recent h2{font-size:18px;margin-bottom:10px}
+  .recent-list{display:grid;gap:9px}
+  .ritem{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;justify-content:space-between}
+  .ritem .rmain{min-width:0}
+  .ritem .rh{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ritem .rmeta{color:var(--muted);font-size:12px;margin-top:2px;display:flex;gap:8px;flex-wrap:wrap}
+  .ritem .redit{flex:none}
+
+  /* ============ DM script editor ============ */
+  .dm-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
+  .dm-card summary{cursor:pointer;color:var(--accent);font-size:13px;font-weight:600;list-style:none}
+  .dm-card summary::-webkit-details-marker{display:none}
+  .dm-card[open] summary{margin-bottom:10px}
+  .dm-card textarea{min-height:120px;font-size:14px}
+  .dm-card .hint{margin-bottom:8px}
+
+  /* ============ mobile: cards over table, bigger targets ============ */
+  @media(max-width:760px){
+    .wrap{padding:12px}
+    .actions{width:100%}
+    .actions button{flex:1;min-width:0;font-size:12px;padding:9px 8px}
+    .analytics{overflow-x:auto}
+    .seg button{padding:14px 8px}
+  }
+  @media(min-width:761px){ .qa-actions{position:static;background:none} }
+</style>
+<!-- Supabase client (cloud sync). Loads only when online; the app still works
+     offline/local without it. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<!-- ============ CLOUD LOGIN GATE (only shown when cloud mode is configured) ============ -->
+<div id="authGate" class="auth-bg" style="display:none">
+  <div class="auth-card">
+    <div class="auth-brand"><small>Elevate Angel Agency</small><h2 id="authTitle">Sign In</h2></div>
+    <p class="auth-sub" id="authSub">Sign in to load your leads from the cloud.</p>
+    <div class="field"><label>Email</label><input id="authEmail" type="email" autocomplete="username" placeholder="you@email.com"></div>
+    <div class="field"><label>Password</label><input id="authPass" type="password" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doSignIn()"></div>
+    <div class="auth-msg" id="authMsg"></div>
+    <button class="btn-quick" style="width:100%;padding:14px" onclick="doSignIn()">Sign In</button>
+    <div class="auth-alt"><a href="#" onclick="toggleSignUp();return false;" id="authToggle">Need to create your login? Sign up</a></div>
+  </div>
+</div>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfQAAAH0CAIAAABEtEjdAAAAtGVYSWZJSSoACAAAAAYAEgEDAAEAAAABAAAAGgEFAAEAAABWAAAAGwEFAAEAAABeAAAAKAEDAAEAAAACAAAAEwIDAAEAAAABAAAAaYcEAAEAAABmAAAAAAAAAGAAAAABAAAAYAAAAAEAAAAGAACQBwAEAAAAMDIxMAGRBwAEAAAAAQIDAACgBwAEAAAAMDEwMAGgAwABAAAA//8AAAKgBAABAAAA9AEAAAOgBAABAAAA9AEAAAAAAAAA4cNEAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAFzmlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSfvu78nIGlkPSdXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQnPz4KPHg6eG1wbWV0YSB4bWxuczp4PSdhZG9iZTpuczptZXRhLyc+CjxyZGY6UkRGIHhtbG5zOnJkZj0naHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyc+CgogPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9JycKICB4bWxuczpBdHRyaWI9J2h0dHA6Ly9ucy5hdHRyaWJ1dGlvbi5jb20vYWRzLzEuMC8nPgogIDxBdHRyaWI6QWRzPgogICA8cmRmOlNlcT4KICAgIDxyZGY6bGkgcmRmOnBhcnNlVHlwZT0nUmVzb3VyY2UnPgogICAgIDxBdHRyaWI6Q3JlYXRlZD4yMDI2LTA2LTE1PC9BdHRyaWI6Q3JlYXRlZD4KICAgICA8QXR0cmliOkRhdGE+eyZxdW90O2RvYyZxdW90OzomcXVvdDtEQUdENFlFQVNyTSZxdW90OywmcXVvdDt1c2VyJnF1b3Q7OiZxdW90O1VBRFpnZFFSSUdzJnF1b3Q7LCZxdW90O2JyYW5kJnF1b3Q7OiZxdW90O0JBRFpnVkZXRWRvJnF1b3Q7LCZxdW90O3RlbXBsYXRlJnF1b3Q7OiZxdW90O0JsYWNrIFdoaXRlIE1pbmltYWxpc3QgTW9kZXJuIEFlc3RoZXRpYyBJbml0aWFscyBGb250IExvZ28mcXVvdDt9PC9BdHRyaWI6RGF0YT4KICAgICA8QXR0cmliOkV4dElkPjdjNjUxNzAyLTdjMmQtNDA3Ni05NDBjLTdkYzc1ZDA1YTMwMjwvQXR0cmliOkV4dElkPgogICAgIDxBdHRyaWI6RmJJZD41MjUyNjU5MTQxNzk1ODA8L0F0dHJpYjpGYklkPgogICAgIDxBdHRyaWI6VG91Y2hUeXBlPjI8L0F0dHJpYjpUb3VjaFR5cGU+CiAgICA8L3JkZjpsaT4KICAgPC9yZGY6U2VxPgogIDwvQXR0cmliOkFkcz4KIDwvcmRmOkRlc2NyaXB0aW9uPgoKIDxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PScnCiAgeG1sbnM6ZGM9J2h0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvJz4KICA8ZGM6dGl0bGU+CiAgIDxyZGY6QWx0PgogICAgPHJkZjpsaSB4bWw6bGFuZz0neC1kZWZhdWx0Jz5FIC0gMjwvcmRmOmxpPgogICA8L3JkZjpBbHQ+CiAgPC9kYzp0aXRsZT4KIDwvcmRmOkRlc2NyaXB0aW9uPgoKIDxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PScnCiAgeG1sbnM6cGRmPSdodHRwOi8vbnMuYWRvYmUuY29tL3BkZi8xLjMvJz4KICA8cGRmOkF1dGhvcj5TaGFuZTwvcGRmOkF1dGhvcj4KIDwvcmRmOkRlc2NyaXB0aW9uPgoKIDxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PScnCiAgeG1sbnM6eG1wPSdodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvJz4KICA8eG1wOkNyZWF0b3JUb29sPkNhbnZhIGRvYz1EQUdENFlFQVNyTSB1c2VyPVVBRFpnZFFSSUdzIGJyYW5kPUJBRFpnVkZXRWRvIHRlbXBsYXRlPUJsYWNrIFdoaXRlIE1pbmltYWxpc3QgTW9kZXJuIEFlc3RoZXRpYyBJbml0aWFscyBGb250IExvZ288L3htcDpDcmVhdG9yVG9vbD4KIDwvcmRmOkRlc2NyaXB0aW9uPgo8L3JkZjpSREY+CjwveDp4bXBtZXRhPgo8P3hwYWNrZXQgZW5kPSdyJz8+XbIyKAAAIABJREFUeJzt3XlwFGX+x3EqRaWgoJISSqiEgmQhUoIU4SpEEYpwhCgUioCAG1lhxYPDg0OW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zdT/PFHHjh2/+eab06dPay5MiRFF2fv37x88eHBgYKB6d4Anw10wOvxofjhMeOyxx+bOnZuZmWn3ZO7UqVNipq+//rojPxtAuAOVmOjuRUREiMwSZw92fz/WD4mDn+hbPPvss5GRkZX6V7Fq1KghjsfiANmpU6fGjRtX6rYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHxSQEBA3TKPPPKI7Fo8pFq1anXdgKcUAfAi6hNihw0bJrsWDwkMDMzLy6vAY0vNbd++XXbL4B/q16//QpmYmBjNW61bt1beatOmTbnTUYYs92HTQufOnZWBGzdurLwSHBysvKI8K9mqGVUp63z169dv/PjxcXFx3bp1M394tLoobOkXi74hERERtq/XqFFDHb1mzZrm49rSTEdfWM+ePdUXn3zySfGK0XPlRQ9RP31B87Bmxx09elQE0507d/zqscVffvml5eFeVFQUEhIiu2XwA7Gxsepm99JLL6mvi3S4ceOG8vratWvNJzJu3DhlSP2z3vW+//57ZeBLly6FhoaKV1q2bKm88umnn1o4o44dO549e9Z2v7p9+/asWbOMhrddFKrLly+X25ATJ04EBASor4tWqKM//vjj5uPaGjNmTLmFTZ06VXkxKSlJ/Le4uNjuKD169LCbLGJSRs0xoT6cftOmTRUYvfKKioqyuxhd9MEHH8huGfyAbXDk5uaKTrTyugh09XXzcH/sscdEaIrBzp07J/7dsGGD+RyVXLt79674V/QHRW/awXB3dka//vqrGCw/P19MdujQoSKClbm88sordodXF8Vnn33mSM/dNqAnTpyovNi8eXOlaQrzcL948aIjPXe1sHv37pWUlAwcOLBKeeGu9tyzs7NLy46jrvTcP/74Y6WAAQMGVGD0Su38+fNWZbrqxx9/lN0s+IG//vWvyga3a9cu8e/ixYvFi927d1dfERITE02moAx27Nix1q1b379/v/TPZwB6WVlZYphTp06JeZWWdQZbtGihzOiTTz6xakYixZRpLliwoLxl8JCaoT///HPaH8SBx7wh4hAiDja3bt1q2LCheFGMIvJ37969yqTUS08aSrgXFhaqM5o3b57RjNR1FBcXJ45VYl5iCZiHuyojI0Mp0rFlYJ9YIGIieXl5gYGBrkynMpo5c6bl4S60bdtWdsvg69Tg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" alt="Elevate Angel"></div>
+      <div><small>Elevate Angel Agency</small><h1>Lead Tracker</h1></div>
+    </div>
+    <div class="actions">
+      <button class="btn-quick" onclick="showTab('quickadd')">⚡ Quick Add</button>
+      <button class="ghost" onclick="openAdd()">+ Add Lead</button>
+      <button class="ghost" onclick="document.getElementById('csvFile').click()">Import CSV</button>
+      <button class="ghost" onclick="exportCSV()">Export CSV</button>
+      <button onclick="exportBackup()">↓ Backup</button>
+      <button class="ghost" onclick="document.getElementById('backupFile').click()">↑ Restore</button>
+      <input type="file" id="csvFile" accept=".csv" style="display:none" onchange="importCSV(event)">
+      <input type="file" id="backupFile" accept=".json,application/json" style="display:none" onchange="importBackup(event)">
+    </div>
+  </div>
+
+  <div id="dailyTarget" class="daily" onclick="showTab('quickadd')" title="DMs sent today (leads marked Messaged). Resets at midnight.">
+    <div class="dt-head"><span class="dt-count" id="dtCount">0/30</span><span class="dt-label">DM'S DAILY TARGET</span></div>
+    <div class="dt-track"><div class="dt-fill" id="dtFill"></div></div>
+    <div class="dt-note" id="dtNote"></div>
+  </div>
+
+  <div class="savebar"><span id="saveStatus"></span></div>
+  <div id="backupReminder" class="reminder" style="display:none"></div>
+
+  <div class="tabbar">
+    <button id="tabBtn-quickadd" class="active" onclick="showTab('quickadd')">⚡ Quick Add</button>
+    <button id="tabBtn-pipeline" onclick="showTab('pipeline')">📋 Pipeline</button>
+    <button id="tabBtn-scripts" onclick="showTab('scripts')">📨 Scripts</button>
+  </div>
+
+  <!-- ============ QUICK ADD TAB (mobile-first capture) — active by default so the
+       screen shows even before/if JS runs ============ -->
+  <div class="tabpanel active" id="tab-quickadd">
+    <div class="qa-inline qa">
+      <p class="muted" style="font-size:13px;margin:0 0 16px">Speed first. Paste her IG, tap a few chips, save. Enrich the full profile later.</p>
+
+      <div class="field">
+        <label>📋 Paste IG link, @handle, or profile header <span class="reqstar">*</span></label>
+        <input id="iqa_handle" placeholder="instagram.com/handle — or paste the header to grab followers too" autocomplete="off" autocapitalize="off" spellcheck="false" oninput="onIgInput()">
+        <div class="iglink" id="iqa_linkPreview"></div>
+      </div>
+
+      <!-- Auto-derived from the paste field — kept as hidden inputs so the form stays clean -->
+      <input type="hidden" id="iqa_name">
+      <input type="hidden" id="iqa_link">
+
+      <div class="field">
+        <label>Priority</label>
+        <div class="seg pri" id="iqa_priority_seg" data-target="iqa_priority">
+          <button type="button" data-val="High" class="High">High</button>
+          <button type="button" data-val="Medium" class="Medium">Medium</button>
+          <button type="button" data-val="Low" class="Low">Low</button>
+          <button type="button" data-val="" class="on">Auto</button>
+        </div>
+        <input type="hidden" id="iqa_priority" value="">
+      </div>
+
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="iqa_notes" placeholder="quick read — why she's worth tracking"></textarea>
+      </div>
+
+      <details class="qa-opt" id="qaMore">
+        <summary>+ Add detail <span class="muted" style="font-weight:400">(optional — enrich later)</span></summary>
+
+        <div class="field">
+          <label>Follower count <span class="muted" style="font-weight:400">(auto-fills from a pasted header)</span></label>
+          <input id="iqa_followers" type="number" inputmode="numeric" placeholder="e.g. 8500">
+        </div>
+
+        <div class="field">
+          <label>Location</label>
+          <input id="iqa_location" placeholder="e.g. Miami, FL" autocomplete="off">
+        </div>
+
+        <div class="field">
+          <label>Niche / vibe</label>
+          <input id="iqa_niche" placeholder="e.g. fitness, cosplay, alt" autocomplete="off">
+        </div>
+
+        <div class="field">
+          <label>Has OF / Fansly?</label>
+          <div class="seg tri" id="iqa_hasof_seg" data-target="iqa_hasof">
+            <button type="button" data-val="Yes" class="yes">Yes</button>
+            <button type="button" data-val="No" class="no">No</button>
+            <button type="button" data-val="Unknown" class="on">Unknown</button>
+          </div>
+          <input type="hidden" id="iqa_hasof" value="Unknown">
+        </div>
+
+        <div class="field">
+          <label>Content quality</label>
+          <div class="seg q" id="iqa_content_seg" data-target="iqa_content">
+            <button type="button" data-val="Low" class="lo">Low</button>
+            <button type="button" data-val="Medium" class="med on">Medium</button>
+            <button type="button" data-val="High" class="hi">High</button>
+          </div>
+          <input type="hidden" id="iqa_content" value="Medium">
+        </div>
+
+        <div class="field">
+          <label>Brand potential <span class="muted" style="font-weight:400">(1–10)</span></label>
+          <div class="brandrow">
+            <input type="range" id="iqa_brand" min="1" max="10" value="5" oninput="document.getElementById('iqa_brandVal').textContent=this.value">
+            <span class="bval" id="iqa_brandVal">5</span>
+          </div>
+        </div>
+      </details>
+
+      <div class="qa-inline-msg" id="iqaMsg"></div>
+
+      <div class="qa-actions">
+        <button class="btn-dm btn-glow" type="button" onclick="copyDM()">📋 Copy DM Script</button>
+        <button class="btn-msg" type="button" onclick="saveInlineQuick('messaged')">✓ Save + Mark as Messaged</button>
+        <div class="row2">
+          <button class="btn-clear btn-glow" type="button" onclick="clearInlineQuick(true)">Clear</button>
+          <button class="btn-saveonly btn-glow" type="button" onclick="saveInlineQuick('save')">Save Only</button>
+        </div>
+      </div>
+
+      <details class="dm-card" id="dmEditor">
+        <summary>✏️ Edit DM script template</summary>
+        <p class="hint muted" style="font-size:12px">Use <code>{name}</code> and <code>{handle}</code> — they fill in from the lead. "Copy DM Script" copies this with placeholders filled, ready to paste into Instagram.</p>
+        <textarea id="dmTemplate" oninput="saveDMTemplate()"></textarea>
+        <div style="margin-top:8px"><button class="ghost sm" type="button" onclick="resetDMTemplate()">Reset to default</button></div>
+      </details>
+
+      <div class="recent">
+        <h2>Recently Added</h2>
+        <div class="recent-list" id="recentList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PIPELINE TAB (full tracker) ============ -->
+  <div class="tabpanel" id="tab-pipeline">
+  <div class="banner" id="followBanner"></div>
+  <div class="pipeline" id="pipeline"></div>
+  <div class="stats" id="weeklyStats"></div>
+
+  <div class="zone">
+    <div class="zonehead">🎯 <b>Target Zone</b><span class="sum" id="zoneSummary"></span></div>
+    <div class="zonerow">
+      <select id="zoneSelect" onchange="onZoneChange()">
+        <option value="nano">Nano — under 5K</option>
+        <option value="hiddenGems">Hidden Gems — 1K–15K</option>
+        <option value="micro">Micro — 5K–30K</option>
+        <option value="midTier">Mid-tier — 15K–50K</option>
+        <option value="established">Established — 50K–250K</option>
+        <option value="custom">Custom range…</option>
+      </select>
+      <span id="customInputs" style="display:none">
+        <input id="zoneMin" type="number" placeholder="min followers" oninput="onCustomInput()">
+        <span class="muted">to</span>
+        <input id="zoneMax" type="number" placeholder="max followers" oninput="onCustomInput()">
+      </span>
+      <span class="muted" style="font-size:11.5px">Creators in this range score full follower points; outside it scores lower.</span>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="full"><input id="search" placeholder="Search name, handle, niche, location, notes…" oninput="render()"></div>
+    <div><label>Niche</label><select id="fNiche" onchange="render()"></select></div>
+    <div><label>Location</label><select id="fLocation" onchange="render()"></select></div>
+    <div><label>Status</label><select id="fStatus" onchange="render()"></select></div>
+    <div><label>Priority</label><select id="fPriority" onchange="render()"><option value="">All</option><option>High</option><option>Medium</option><option>Low</option></select></div>
+    <div><label>Enrichment</label><select id="fEnrich" onchange="render()"><option value="">All</option><option value="needs">⚠ Needs enrichment</option><option value="done">Enriched</option></select></div>
+    <div><label>Recommended Action</label><select id="fRecAction" onchange="render()"><option value="">All</option><option>Priority lead</option><option>Fully enrich</option><option>Review later</option><option>Quick-save only</option><option>Skip / Archive</option></select></div>
+    <div><label>Min followers</label><input id="fMinFol" type="number" placeholder="0" oninput="render()"></div>
+    <div><label>Min score</label><input id="fMinScore" type="number" placeholder="0" oninput="render()"></div>
+    <div><label>Sort by</label>
+      <select id="sortBy" onchange="render()">
+        <option value="score">Lead score</option>
+        <option value="followup">Follow-up date</option>
+        <option value="found">Date found</option>
+        <option value="priority">Priority</option>
+        <option value="status">Status</option>
+      </select>
+    </div>
+    <div class="row" style="align-items:flex-end"><button class="ghost sm" onclick="clearFilters()">Clear filters</button></div>
+  </div>
+
+  <div class="cards" id="cards"></div>
+
+  <div class="analytics">
+    <h2>What's working — outreach learning</h2>
+    <p class="muted" style="font-size:12.5px;margin:4px 0 0">Reply rate = leads marked "Replied: Yes" ÷ leads contacted in each group. Add feedback after outreach to populate this.</p>
+    <div class="anwrap" id="analytics"></div>
+  </div>
+
+  <p class="muted" style="font-size:11px;text-align:center;margin-top:22px">
+    Everything saves automatically to this browser on your computer. No accounts, no uploads, fully private.
+    This is a manual lead-tracking tool — research and outreach are done by you / your VA by hand.
+  </p>
+  </div><!-- /tab-pipeline -->
+
+  <!-- ============ SCRIPTS TAB (outreach memory bank) ============ -->
+  <div class="tabpanel" id="tab-scripts">
+    <div class="bankhead">
+      <h2>Outreach Memory Bank</h2>
+      <p class="muted" style="font-size:13px;margin:6px 0 0">Every message you log when a lead replies (or ghosts) is saved here, so you can see which outreach actually earns a response and refine your scripts over time. When you move a lead to <b>Replied</b>, you'll be asked to paste the message that worked.</p>
+    </div>
+    <div class="stats" id="bankStats" style="margin-top:14px"></div>
+    <div class="bankcols">
+      <div class="bankcol">
+        <h3 class="bankcol-h working">✓ Working <span class="muted" id="bankWorkingCount"></span></h3>
+        <div id="bankWorking" class="banklist"></div>
+      </div>
+      <div class="bankcol">
+        <h3 class="bankcol-h notworking">✕ Not working <span class="muted" id="bankNotCount"></span></h3>
+        <div id="bankNot" class="banklist"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Outreach capture modal -->
+<div class="modal-bg" id="msgModal">
+  <div class="modal" style="max-width:520px">
+    <h2 id="msgModalTitle">Log outreach message</h2>
+    <p class="muted" id="msgModalSub" style="font-size:13px;margin:0 0 12px"></p>
+    <input type="hidden" id="msg_leadId">
+    <input type="hidden" id="msg_outcome">
+    <div class="field">
+      <label>The DM / opener you sent her</label>
+      <textarea id="msg_text" style="min-height:120px;font-size:15px" placeholder="Paste the exact first message you sent…"></textarea>
+      <div class="hint">Stored against this lead and added to your memory bank. You can edit it later from the Scripts tab.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="ghost" onclick="closeMsgModal()">Skip for now</button>
+      <button onclick="saveMsgModal()">Save to memory bank</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <h2 id="modalTitle">Add Lead</h2>
+    <input type="hidden" id="fld_id">
+    <div class="form-grid">
+      <div><label>Name / handle *</label><input id="fld_name"></div>
+      <div><label>Platform link</label><input id="fld_link" placeholder="https://…"></div>
+      <div><label>Location</label><input id="fld_location"></div>
+      <div><label>Niche / vibe</label><input id="fld_niche" placeholder="e.g. fitness, cosplay, alt"></div>
+      <div><label>Follower count</label><input id="fld_followers" type="number" oninput="markEnriched()"></div>
+      <div><label>Has OF / Fansly?</label><select id="fld_hasof" onchange="markEnriched()"><option>Unknown</option><option>Yes</option><option>No</option></select></div>
+      <div><label>Current monetization</label><select id="fld_monet" onchange="markEnriched()"><option>Unknown</option><option>None</option><option>OF</option><option>Fansly</option><option>Brand deals</option></select></div>
+      <div><label>Content quality</label><select id="fld_content" onchange="markEnriched()"><option>Medium</option><option>Low</option><option>High</option></select></div>
+      <div><label>Engagement quality</label><select id="fld_engage" onchange="markEnriched()"><option>Medium</option><option>Low</option><option>High</option></select></div>
+      <div><label>Brand potential (1–10)</label><input id="fld_brand" type="number" min="1" max="10" value="5" oninput="markEnriched()"></div>
+
+      <fieldset class="fieldset">
+        <legend>Fit &amp; readiness (feeds the score)</legend>
+        <div class="form-grid">
+          <div><label>Niche potential</label><select id="fld_nichefit" onchange="markEnriched()"><option>Medium</option><option>Low</option><option>High</option></select></div>
+          <div><label>Appears monetizable?</label><select id="fld_monetizable" onchange="markEnriched()"><option>Unknown</option><option>Yes</option><option>No</option></select></div>
+          <div><label>Page looks active?</label><select id="fld_active" onchange="markEnriched()"><option>Unknown</option><option>Yes</option><option>No</option></select></div>
+          <div><label>Seems approachable?</label><select id="fld_approach" onchange="markEnriched()"><option>Unknown</option><option>Yes</option><option>No</option></select></div>
+        </div>
+      </fieldset>
+
+      <div><label>Status</label><select id="fld_status"><option>Found</option><option>Messaged</option><option>Replied</option><option>Follow-up</option><option>Negotiating</option><option>Signed</option><option>Ghosted</option><option>Not Fit</option></select></div>
+      <div><label>Priority (auto from score, override here)</label><select id="fld_priority"><option value="">Auto</option><option>High</option><option>Medium</option><option>Low</option></select></div>
+      <div><label>Date found</label><input id="fld_found" type="date"></div>
+      <div><label>Date contacted</label><input id="fld_contacted" type="date"></div>
+      <div><label>Follow-up date</label><input id="fld_followup" type="date"></div>
+      <div><label>Script used</label><input id="fld_script" placeholder="e.g. Script A — warm intro"></div>
+      <div class="full"><label>Notes</label><textarea id="fld_notes"></textarea></div>
+      <div class="full" style="display:flex;align-items:center;gap:8px">
+        <input type="checkbox" id="fld_needsEnrich" style="width:auto">
+        <label for="fld_needsEnrich" style="margin:0;cursor:pointer">⚠ Needs enrichment — clears automatically once you fill in the details above (followers, content quality, brand potential, monetization, etc.). You can also tick/untick manually.</label>
+      </div>
+
+      <fieldset class="fieldset">
+        <legend>Outreach feedback (fill after they reply / go quiet)</legend>
+        <div class="form-grid">
+          <div><label>Replied?</label><select id="fld_replied"><option>—</option><option>Yes</option><option>No</option></select></div>
+          <div><label>Interested?</label><select id="fld_interested"><option>—</option><option>Yes</option><option>No</option></select></div>
+          <div><label>Bad fit?</label><select id="fld_badfit"><option>—</option><option>Yes</option><option>No</option></select></div>
+          <div class="full"><label>Why (what worked / didn't)</label><textarea id="fld_fbnotes"></textarea></div>
+        </div>
+      </fieldset>
+    </div>
+    <div class="modal-foot">
+      <button class="ghost" id="delBtn" onclick="deleteLead()" style="background:rgba(248,113,113,.12);color:#fca5a5;border-color:transparent">Delete</button>
+      <div style="display:flex;gap:8px;margin-left:auto">
+        <button class="ghost" onclick="closeModal()">Cancel</button>
+        <button onclick="saveLead()">Save lead</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+/* ---------- on-screen error reporter ----------
+   If anything throws (especially on a device with no dev tools), show it on the
+   page instead of leaving a blank screen — so failures are visible, not silent. */
+window.onerror=function(msg,src,line,col){
+  try{
+    var b=document.getElementById('errBanner');
+    if(!b){b=document.createElement('div');b.id='errBanner';
+      b.style.cssText='position:fixed;left:0;right:0;top:0;z-index:9999;background:#7f1d1d;color:#fff;font:13px/1.4 -apple-system,Arial,sans-serif;padding:10px 14px;white-space:pre-wrap';
+      (document.body||document.documentElement).appendChild(b);}
+    b.textContent='⚠ Script error: '+msg+(line?(' (line '+line+')'):'')+'\nTap to dismiss — and please screenshot this for Shane.';
+    b.onclick=function(){b.style.display='none';};
+  }catch(e){}
+  return false;
+};
+
+const KEY='elevateAngelLeads_v1';
+const STATUSES=['Found','Messaged','Replied','Follow-up','Negotiating','Signed','Ghosted','Not Fit'];
+const WARM=['Replied','Follow-up','Negotiating'];
+const CONTACTED_STATUSES=['Messaged','Replied','Follow-up','Negotiating','Signed','Ghosted'];
+let leads=load();
+
+/* ---------- persistence ----------
+   SAFE STORAGE WRAPPERS — iOS Safari throws a SecurityError when localStorage
+   is touched on a file:// origin or in Private Browsing. Every storage access
+   goes through these so nothing can throw on load or on a tap. If localStorage
+   is unavailable we transparently fall back to an in-memory store (data lasts
+   for the session only, but the app never crashes). */
+const LASTSAVED_KEY='elevateAngelLastSaved_v1';
+const BACKUP_KEY='elevateAngelLastBackup_v1';
+let STORAGE_OK=true;
+const memStore={};
+function lsGet(k){
+  try{return localStorage.getItem(k);}
+  catch(e){STORAGE_OK=false;return (k in memStore)?memStore[k]:null;}
+}
+function lsSet(k,v){
+  try{localStorage.setItem(k,v);}
+  catch(e){STORAGE_OK=false;memStore[k]=v;}
+}
+function load(){try{return JSON.parse(lsGet(KEY))||[]}catch(e){return[]}}
+function save(){lsSet(KEY,JSON.stringify(leads));lsSet(LASTSAVED_KEY,new Date().toISOString());updateStatus();}
+
+/* ============================================================
+   ☁️  CLOUD SYNC CONFIG — paste your two Supabase values here
+   ------------------------------------------------------------
+   Leave BOTH blank and the app runs locally in this browser,
+   exactly as before. Fill them in (see Supabase-Setup-Guide.md)
+   to turn on cloud mode: login, cross-device sync, and realtime.
+   The anon key is safe to embed — it's protected by the database's
+   Row Level Security. NEVER paste the service_role key here.
+   ============================================================ */
+const SUPABASE_URL = 'https://glxgfidgpgcmeifsuqke.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_8cxGu1Nhn2ZMZklpBjB-GA_iUCCwMEw';
+/* ===================== END CLOUD CONFIG ===================== */
+
+const CLOUD = !!(SUPABASE_URL && SUPABASE_ANON_KEY && typeof supabase!=='undefined' && supabase.createClient);
+let sb = CLOUD ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+let cloudUser = null;          // signed-in user (cloud mode only)
+let cloudReady = false;        // true once an initial cloud load has completed
+
+/* Write one lead up to the cloud (no-op in local mode / before sign-in). */
+async function cloudUpsert(l){
+  if(!CLOUD||!cloudUser||!l)return;
+  try{ await sb.from('leads').upsert({id:l.id, data:l, owner:cloudUser.id, updated_at:new Date().toISOString()},{onConflict:'id'}); }
+  catch(e){ console.warn('cloudUpsert failed',e); }
+}
+/* Remove one lead from the cloud. */
+async function cloudDelete(id){
+  if(!CLOUD||!cloudUser||!id)return;
+  try{ await sb.from('leads').delete().eq('id',id); }
+  catch(e){ console.warn('cloudDelete failed',e); }
+}
+/* Push many leads at once (imports + first-time migration). */
+async function cloudBulk(arr){
+  if(!CLOUD||!cloudUser||!arr||!arr.length)return;
+  try{ await sb.from('leads').upsert(arr.map(l=>({id:l.id,data:l,owner:cloudUser.id,updated_at:new Date().toISOString()})),{onConflict:'id'}); }
+  catch(e){ console.warn('cloudBulk failed',e); }
+}
+/* Pull the full lead list down from the cloud and render. On the very first
+   load, if the cloud is empty but this browser has leads, migrate them up. */
+const MIGRATED_KEY='elevateAngelMigrated_v1';
+async function cloudLoad(){
+  if(!CLOUD||!cloudUser)return;
+  try{
+    const {data,error}=await sb.from('leads').select('id,data').order('updated_at',{ascending:false});
+    if(error)throw error;
+    const rows=(data||[]).map(r=>r.data).filter(Boolean);
+    if(!rows.length && leads.length && !lsGet(MIGRATED_KEY)){
+      await cloudBulk(leads);          // one-time: move existing local leads up
+      lsSet(MIGRATED_KEY,'1');
+    }else{
+      leads=rows;                       // cloud is the source of truth
+      lsSet(MIGRATED_KEY,'1');
+    }
+    cloudReady=true;
+    save(); render();
+  }catch(e){ console.warn('cloudLoad failed — staying on local cache',e); }
+}
+/* Live updates: refetch (debounced) whenever any device changes the table. */
+let _rtTimer=null;
+function cloudSubscribe(){
+  if(!CLOUD||!cloudUser)return;
+  try{
+    sb.channel('leads-rt')
+      .on('postgres_changes',{event:'*',schema:'public',table:'leads'},()=>{
+        clearTimeout(_rtTimer);
+        _rtTimer=setTimeout(()=>{ if(!document.querySelector('.modal-bg.open')) cloudLoad(); },500);
+      })
+      .subscribe();
+  }catch(e){ console.warn('realtime subscribe failed',e); }
+}
+
+/* ---------- auth (cloud mode only) ---------- */
+let _signUpMode=false;
+function showAuthGate(show){const g=document.getElementById('authGate');if(g)g.style.display=show?'flex':'none';}
+function toggleSignUp(){
+  _signUpMode=!_signUpMode;
+  document.getElementById('authTitle').textContent=_signUpMode?'Create Login':'Sign In';
+  document.getElementById('authSub').textContent=_signUpMode?'Create your account to start syncing.':'Sign in to load your leads from the cloud.';
+  document.querySelector('#authGate .btn-quick').textContent=_signUpMode?'Create Account':'Sign In';
+  document.getElementById('authToggle').textContent=_signUpMode?'Already have a login? Sign in':'Need to create your login? Sign up';
+  document.getElementById('authMsg').textContent='';
+}
+function authMsg(t,ok){const m=document.getElementById('authMsg');if(!m)return;m.textContent=t;m.className='auth-msg'+(ok?' ok':'');}
+async function doSignIn(){
+  const email=(document.getElementById('authEmail').value||'').trim();
+  const pass=document.getElementById('authPass').value||'';
+  if(!email||!pass){authMsg('Enter your email and password.');return;}
+  authMsg(_signUpMode?'Creating account…':'Signing in…',true);
+  try{
+    let res;
+    if(_signUpMode){ res=await sb.auth.signUp({email,password:pass}); }
+    else{ res=await sb.auth.signInWithPassword({email,password:pass}); }
+    if(res.error)throw res.error;
+    if(_signUpMode && !res.data.session){ authMsg('Account made. If email confirmation is on, confirm then sign in.',true); _signUpMode=false; return; }
+    // onAuthStateChange will pick up the session and start the app.
+  }catch(e){ authMsg(e.message||'Sign-in failed.'); }
+}
+async function doSignOut(){ try{ await sb.auth.signOut(); }catch(e){} location.reload(); }
+/* Wire auth state → app. Called once at startup in cloud mode. */
+function initCloudAuth(){
+  showAuthGate(true);
+  sb.auth.onAuthStateChange((_evt,session)=>{
+    if(session && session.user){
+      cloudUser=session.user;
+      showAuthGate(false);
+      cloudLoad();
+      cloudSubscribe();
+    }else{
+      cloudUser=null; showAuthGate(true);
+    }
+  });
+  // Resume an existing session if one is stored.
+  sb.auth.getSession().then(({data})=>{ if(data&&data.session){ /* handled by listener */ } });
+}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+function today(){const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);}
+// Days after "Mark as Messaged" that a follow-up is auto-scheduled. Change to taste.
+const QUICK_FOLLOWUP_DAYS=3;
+function addDays(iso,n){const d=new Date(iso+'T00:00:00');d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
+function relTime(iso){if(!iso)return 'just now';const s=(Date.now()-new Date(iso))/1000;if(s<60)return 'just now';if(s<3600)return Math.floor(s/60)+' min ago';if(s<86400)return Math.floor(s/3600)+' hr ago';return new Date(iso).toLocaleDateString();}
+function updateStatus(){const el=document.getElementById('saveStatus');if(!el)return;
+  if(CLOUD&&cloudUser){el.innerHTML='☁️ <b>'+leads.length+'</b> lead'+(leads.length===1?'':'s')+' synced to cloud · '+esc(cloudUser.email||'signed in')+' · <button class="signout" onclick="doSignOut()">Sign out</button>';return;}
+  if(CLOUD&&!cloudUser){el.innerHTML='☁️ Cloud mode — sign in to sync.';return;}
+  if(!STORAGE_OK){el.innerHTML='⚠ <b>'+leads.length+'</b> lead'+(leads.length===1?'':'s')+' — this browser is blocking storage (file:// or Private Mode), so changes last for this session only. Open over http(s) / add to Home Screen, or use ↓ Backup to keep your data.';return;}
+  el.innerHTML='💾 <b>'+leads.length+'</b> lead'+(leads.length===1?'':'s')+' saved to this browser · last updated '+relTime(lsGet(LASTSAVED_KEY));}
+
+/* ---------- full backup / restore (lossless JSON) ---------- */
+function exportBackup(){
+  const data={app:'ElevateAngelLeadTracker',version:1,exportedAt:new Date().toISOString(),zone:loadZone()||{key:'hiddenGems'},leads};
+  download('elevate-angel-FULL-BACKUP-'+today()+'.json',JSON.stringify(data,null,2));
+  lsSet(BACKUP_KEY,new Date().toISOString());
+  checkBackupReminder();
+}
+function normalizeLead(l){if(!l.id)l.id=uid();if(!l.status)l.status='Found';return l;}
+function importBackup(e){
+  const file=e.target.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      const incoming=Array.isArray(data)?data:data.leads;
+      if(!Array.isArray(incoming))throw new Error('No leads found in this file.');
+      let mode='replace';
+      if(leads.length){
+        mode=confirm('You already have '+leads.length+' leads.\n\nOK = REPLACE everything with this backup ('+incoming.length+' leads).\nCancel = MERGE (keep what you have and add anything new).')?'replace':'merge';
+      }
+      if(mode==='replace'){leads=incoming.map(normalizeLead);}
+      else{const byId={};leads.forEach(l=>byId[l.id]=l);incoming.forEach(x=>{x=normalizeLead(x);byId[x.id]=Object.assign(byId[x.id]||{},x);});leads=Object.values(byId);}
+      if(data.zone){lsSet(ZONE_KEY,JSON.stringify(data.zone));initZone();}
+      render();cloudBulk(leads);
+      alert('Restored '+incoming.length+' leads ('+mode+'). You now have '+leads.length+' total.'+(CLOUD&&cloudUser&&mode==='replace'?'\n\nNote: cloud keeps any older leads too — delete unwanted ones to fully replace.':''));
+    }catch(err){alert('Could not read this backup file: '+err.message);}
+    e.target.value='';
+  };
+  r.readAsText(file);
+}
+function checkBackupReminder(){
+  const el=document.getElementById('backupReminder');if(!el)return;
+  const last=lsGet(BACKUP_KEY);
+  const days=last?(Date.now()-new Date(last))/86400000:Infinity;
+  if(leads.length>0 && days>=7){
+    el.style.display='flex';
+    el.innerHTML='<span>📦 <b>Backup reminder:</b> '+(last?('it has been '+Math.floor(days)+' days since your last full backup.'):'you have not made a full backup yet.')+' Save one and drop it in Google Drive for safe keeping.</span><button class="sm" onclick="exportBackup()">Backup now</button>';
+  }else{el.style.display='none';}
+}
+
+/* ============================================================
+   ⚙️  SCORING CONFIG — THIS IS THE ONLY PART YOU NEED TO EDIT
+   ------------------------------------------------------------
+   As you learn which creators actually reply, change the
+   numbers below. Save the file and refresh the page — every
+   lead is re-scored instantly. You don't need to touch any
+   other code.
+
+   HOW THE SCORE WORKS:
+   Each factor contributes up to its "weight" in points. The
+   weights below DON'T have to add up to 100 — the final score
+   is automatically rescaled to a clean 0–100. So if you want
+   "follower count" to matter twice as much, just double its
+   weight; everything else stays balanced for you.
+   ============================================================ */
+const SCORING_CONFIG = {
+
+  // 1) WEIGHTS — how much each factor matters. Bigger = more important.
+  //    WARM-LEAD TUNING (16 Jun 2026): a creator who already has OF/Fansly
+  //    or is actively monetizing has crossed the mental barrier of selling
+  //    to her audience, so she's a WARMER lead. Has OF + Current monetization
+  //    now carry the most weight of any single signals — but they DON'T act
+  //    alone: brand potential, content, engagement, niche, activity and
+  //    reach still make up the majority of the score, so an OF creator who
+  //    is otherwise weak lands Medium, not auto-High.
+  weights: {
+    hasOF:            18,  // already on OF / Fansly? — top warm signal
+    monetization:     16,  // currently monetizing (OF/Fansly = warmest)
+    brandPotential:   16,  // your 1–10 brand rating
+    contentQuality:   10,  // Low / Medium / High
+    engagement:       10,  // Low / Medium / High
+    nicheFit:         10,  // her potential to be niched (most post random lifestyle)
+    followers:         8,  // follower count (see bands below)
+    pageActive:        8,  // is the page active / reachable?
+    approachable:      6,  // does she seem approachable for a DM?
+    monetizable:       4,  // does she LOOK monetizable? (judgment; backs up the above)
+  },
+
+  // 2) LOW / MEDIUM / HIGH → multiplier (0 to 1). Used by content,
+  //    engagement, niche potential.
+  lowMedHigh: { Low: 0, Medium: 0.5, High: 1 },
+
+  // 3) YES / UNKNOWN / NO → multiplier (0 to 1). Used by has OF/Fansly,
+  //    appears-monetizable, page active, approachable.
+  //    Yes = full points, Unknown = neutral/half, No = zero (fewer points).
+  yesNoUnknown: { Yes: 1, Unknown: 0.5, No: 0 },
+
+  // 3b) CURRENT MONETIZATION → multiplier (0 to 1). Drives the new
+  //     "monetization" weight above. OF/Fansly = warmest (already selling
+  //     subscriptions). Brand deals = monetizing, but not subscription, so
+  //     warm-ish. Unknown = neutral. None = fewest points.
+  monetizationMult: { OF: 1, Fansly: 1, 'Brand deals': 0.6, Unknown: 0.5, None: 0 },
+
+  // 4) FOLLOWER BANDS — [minFollowers, multiplier 0..1].
+  //    NOTE: you normally control this with the "🎯 Target Zone"
+  //    selector in the app (no code needed) — picking a zone there
+  //    rebuilds this list automatically. The values below are just
+  //    the starting defaults before a zone is applied.
+  followerBands: [
+    [1000000, 0.45],  // mega-influencer — not your lane
+    [ 250000, 0.50],
+    [ 100000, 0.60],
+    [  50000, 0.70],
+    [  15000, 0.85],  // just above your sweet spot
+    [   8000, 1.00],  // ─ core sweet spot (8K–15K)
+    [   3000, 0.95],  //   sweet spot (3K–8K)
+    [   1000, 0.85],  //   entry of target range (1K–3K)
+    [      0, 0.35],  // under 1K — too small / unproven
+  ],
+
+  // 5) PRIORITY CUTOFFS — score at or above highMin = High priority,
+  //    at or above mediumMin = Medium, below that = Low.
+  priority: { highMin: 80, mediumMin: 50 },
+};
+/* ===================== END OF CONFIG ======================== */
+
+function folMult(f){f=+f||0;for(const [min,m] of SCORING_CONFIG.followerBands){if(f>=min)return m;}return 0;}
+function scoreParts(l){
+  const w=SCORING_CONFIG.weights, lmh=SCORING_CONFIG.lowMedHigh, ynu=SCORING_CONFIG.yesNoUnknown,
+        mon=SCORING_CONFIG.monetizationMult;
+  // half-point default when a value is missing (ES5-safe; avoids ?? for old Safari)
+  const def=v=>(v==null?0.5:v);
+  // raw points before rescaling
+  const raw={
+    'Has OF/Fansly':def(ynu[l.hasof])*w.hasOF,
+    'Monetization':def(mon[l.monet])*w.monetization,
+    'Brand potential':((+l.brand||5)/10)*w.brandPotential,
+    'Content quality':def(lmh[l.content])*w.contentQuality,
+    'Engagement':def(lmh[l.engage])*w.engagement,
+    'Niche potential':def(lmh[l.nichefit])*w.nicheFit,
+    'Followers':folMult(l.followers)*w.followers,
+    'Page active':def(ynu[l.active])*w.pageActive,
+    'Approachable':def(ynu[l.approach])*w.approachable,
+    'Monetizable':def(ynu[l.monetizable])*w.monetizable,
+  };
+  // rescale so the maximum possible total is always 100
+  const maxTotal=Object.values(w).reduce((a,b)=>a+b,0);
+  const factor=maxTotal?100/maxTotal:1;
+  const out={};
+  for(const k in raw) out[k]=Math.round(raw[k]*factor);
+  return out;
+}
+function leadScore(l){const p=scoreParts(l);return Object.values(p).reduce((a,b)=>a+b,0);}
+function autoPriority(s){const p=SCORING_CONFIG.priority;return s>=p.highMin?'High':s>=p.mediumMin?'Medium':'Low';}
+function priorityOf(l){return l.priority||autoPriority(leadScore(l));}
+
+/* ============================================================
+   🧭  ENRICHMENT RECOMMENDATION — protects your time
+   ------------------------------------------------------------
+   Tells you how much effort a lead deserves based on her score,
+   so you DON'T fully enrich every lead. Sub-60 leads stay
+   lightweight UNLESS she already has OF/Fansly or has replied —
+   those are warm signals worth the extra work.
+
+   Bands (from your rules):
+     0–49   Skip / Archive   — don't enrich unless she replies
+     50–59  Quick-save only  — enrich only if OF/Fansly or reply
+     60–74  Review later     — enrich if OF/Fansly, decent content, or strong brand
+     75–84  Fully enrich     — good lead
+     85–100 Priority lead    — fully enrich + personal DM
+   ============================================================ */
+const REC_ACTIONS=['Skip / Archive','Quick-save only','Review later','Fully enrich','Priority lead'];
+const REC_CLASS={
+  'Skip / Archive':'act-skip','Quick-save only':'act-quick','Review later':'act-review',
+  'Fully enrich':'act-enrich','Priority lead':'act-priority'
+};
+function recommendedAction(l){
+  const s=leadScore(l);
+  const hasOF   = l.hasof==='Yes' || l.monet==='OF' || l.monet==='Fansly';
+  const replied = l.replied==='Yes';
+  const strongBrand   = (+l.brand||0)>=7;
+  const decentContent = l.content==='Medium' || l.content==='High';
+  let action, reason='';
+  if(s>=85){ action='Priority lead'; }
+  else if(s>=75){ action='Fully enrich'; }
+  else if(s>=60){                       // Review later band
+    if(hasOF){ action='Fully enrich'; reason='has OF/Fansly'; }
+    else if(replied){ action='Fully enrich'; reason='she replied'; }
+    else if(strongBrand){ action='Fully enrich'; reason='strong brand potential'; }
+    else if(decentContent){ action='Fully enrich'; reason='decent content'; }
+    else { action='Review later'; }
+  }
+  else if(s>=50){                       // Quick-save band — keep lightweight
+    if(hasOF){ action='Fully enrich'; reason='has OF/Fansly'; }
+    else if(replied){ action='Fully enrich'; reason='she replied'; }
+    else { action='Quick-save only'; }
+  }
+  else {                                // 0–49 — skip unless she replies
+    if(replied){ action='Review later'; reason='she replied'; }
+    else if(hasOF){ action='Review later'; reason='has OF/Fansly'; }
+    else { action='Skip / Archive'; }
+  }
+  return {action,reason,score:s};
+}
+/* Only surface the "Needs enrichment" warning on leads actually worth your
+   time — i.e. ranked ABOVE "Quick-save only" (Review later, Fully enrich,
+   Priority lead). Skip / Archive and Quick-save only leads stay quiet so you
+   don't waste time cleaning up low-value profiles. */
+function worthEnriching(l){return REC_ACTIONS.indexOf(recommendedAction(l).action)>=2;}
+function showNeedsEnrich(l){return l.needsEnrichment && worthEnriching(l);}
+
+/* ---------- TARGET ZONE (in-app control for follower scoring) ----------
+   Picking a zone rebuilds SCORING_CONFIG.followerBands so the chosen
+   range earns full follower points and accounts outside it score less.
+   This replaces hand-editing the followerBands list in the config. */
+const ZONE_KEY='elevateAngelZone_v1';
+const ZONES={
+  nano:        {label:'Nano (under 5K)',     min:500,   max:5000},
+  hiddenGems:  {label:'Hidden Gems (1K–15K)', min:1000,  max:15000},
+  micro:       {label:'Micro (5K–30K)',       min:5000,  max:30000},
+  midTier:     {label:'Mid-tier (15K–50K)',   min:15000, max:50000},
+  established: {label:'Established (50K–250K)',min:50000, max:250000},
+};
+function buildFollowerBands(minT,maxT){
+  minT=Math.max(1,Math.round(+minT||1));
+  maxT=Math.max(minT+1,Math.round(+maxT||minT+1));
+  return [
+    [maxT*8, 0.45],          // far above your zone — not the goal
+    [maxT*4, 0.55],
+    [maxT*2, 0.70],
+    [maxT,   0.85],          // just above the zone
+    [minT,   1.00],          // ── YOUR TARGET ZONE: full points
+    [Math.round(minT*0.5),  0.80],  // just below
+    [Math.round(minT*0.25), 0.55],
+    [0,      0.30],          // way too small / unproven
+  ];
+}
+function loadZone(){try{return JSON.parse(lsGet(ZONE_KEY))}catch(e){return null}}
+function applyZone(z){
+  let min,max;
+  if(z.key==='custom'){min=z.min;max=z.max;}
+  else{const def=ZONES[z.key]||ZONES.hiddenGems;min=def.min;max=def.max;}
+  SCORING_CONFIG.followerBands=buildFollowerBands(min,max);
+  const fmt=n=>(+n).toLocaleString();
+  document.getElementById('zoneSummary').textContent='— full points for '+fmt(min)+'–'+fmt(max)+' followers';
+}
+function onZoneChange(){
+  const key=val('zoneSelect');
+  document.getElementById('customInputs').style.display=key==='custom'?'inline':'none';
+  let z=key==='custom'?{key:'custom',min:+val('zoneMin')||1000,max:+val('zoneMax')||15000}:{key};
+  lsSet(ZONE_KEY,JSON.stringify(z));
+  applyZone(z);render();
+}
+function onCustomInput(){
+  const min=+val('zoneMin')||0,max=+val('zoneMax')||0;
+  if(min>0&&max>min){const z={key:'custom',min,max};lsSet(ZONE_KEY,JSON.stringify(z));applyZone(z);render();}
+}
+function initZone(){
+  const z=loadZone()||{key:'hiddenGems'};
+  document.getElementById('zoneSelect').value=z.key;
+  if(z.key==='custom'){
+    document.getElementById('customInputs').style.display='inline';
+    document.getElementById('zoneMin').value=z.min;
+    document.getElementById('zoneMax').value=z.max;
+  }
+  applyZone(z);
+}
+
+/* ---------- helpers ---------- */
+function esc(s){return(s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function fmtNum(n){n=+n||0;return n>=1000?(n/1000).toFixed(n>=10000?0:1)+'k':n;}
+function daysFromToday(d){if(!d)return null;return Math.round((new Date(d)-new Date(today()))/86400000);}
+function uniq(arr){return[...new Set(arr.filter(Boolean))].sort();}
+
+/* ---------- rendering ---------- */
+function pipelineHTML(){
+  const counts={};STATUSES.forEach(s=>counts[s]=0);
+  leads.forEach(l=>counts[l.status]=(counts[l.status]||0)+1);
+  return `<span class="pill"><b>${leads.length}</b> total</span>`+
+    STATUSES.map(s=>`<span class="pill">${s} <b>${counts[s]}</b></span>`).join('');
+}
+function weeklyHTML(){
+  const since=new Date(Date.now()-7*86400000).toISOString().slice(0,10);
+  const added=leads.filter(l=>l.found>=since).length;
+  const dms=leads.filter(l=>l.contacted>=since).length;
+  const replies=leads.filter(l=>l.contacted>=since&&l.replied==='Yes').length;
+  const rate=dms?Math.round(replies/dms*100):0;
+  const warm=leads.filter(l=>WARM.includes(l.status)).length;
+  const signed=leads.filter(l=>l.status==='Signed').length;
+  const S=[['Leads added',added],['DMs sent',dms],['Replies',replies],['Reply rate',rate+'%'],['Warm leads',warm],['Signed',signed]];
+  return S.map(([l,n])=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('')+
+    `<div class="stat"><div class="n">7d</div><div class="l">Window (added/DMs/replies)</div></div>`;
+}
+function followBannerHTML(){
+  const due=leads.filter(l=>l.followup&&daysFromToday(l.followup)<=0&&!['Signed','Ghosted','Not Fit'].includes(l.status));
+  if(!due.length)return `No follow-ups due today. ✦ Nice and clear.`;
+  return `<b>${due.length}</b> follow-up${due.length>1?'s':''} due (today or overdue): `+
+    due.slice(0,6).map(l=>esc(l.name)).join(', ')+(due.length>6?'…':'');
+}
+
+function activeLead(l){return !['Signed','Ghosted','Not Fit'].includes(l.status);}
+
+function cardHTML(l){
+  const s=leadScore(l), pri=priorityOf(l), cls=s>=80?'hi':s>=50?'med':'lo';
+  const d=daysFromToday(l.followup);
+  let dueCls='due',dueTxt='';
+  if(l.followup){dueTxt='Follow-up '+l.followup;dueCls+= d<0?' over':d===0?' today':'';if(d<0)dueTxt+=' (overdue)';else if(d===0)dueTxt+=' (today)';}
+  const parts=scoreParts(l);
+  const breakdown=Object.entries(parts).map(([k,v])=>`${k}: ${v}`).join(' · ');
+  const rec=recommendedAction(l);
+  const link=l.link?`<a href="${esc(l.link)}" target="_blank" rel="noopener">link ↗</a>`:'<span class="muted">no link</span>';
+  return `<div class="card">
+    <div class="score ${cls}">${s}<small>/100</small></div>
+    <div class="cmain">
+      <h3>${esc(l.name||'(no name)')}</h3>
+      <div class="meta">${link}${l.niche?'<span>'+esc(l.niche)+'</span>':''}${l.location?'<span>📍 '+esc(l.location)+'</span>':''}${l.followers?'<span>'+fmtNum(l.followers)+' followers</span>':''}</div>
+      <div class="tags">
+        <span class="tag pri-${pri}">${pri} priority</span>
+        <span class="tag st">${esc(l.status)}</span>
+        ${showNeedsEnrich(l)?'<span class="tag enrich">⚠ Needs enrichment</span>':''}
+        ${DUP_HANDLES.has(leadHandle(l))?'<span class="tag dup">⚠ Duplicate</span>':''}
+        ${l.hasof==='Yes'?'<span class="tag">Has OF/Fansly</span>':''}
+      </div>
+      <div class="recact ${REC_CLASS[rec.action]}" title="Based on lead score ${rec.score}/100">
+        <span class="rk">Recommended Action</span>
+        <span class="rv">${rec.action}</span>
+        ${rec.reason?`<span class="rwhy">· ${esc(rec.reason)}</span>`:''}
+      </div>
+      ${l.notes?`<div class="notes">"${esc(l.notes.slice(0,120))}${l.notes.length>120?'…':''}"</div>`:''}
+      <details class="more">
+        <summary>Details &amp; edit</summary>
+        <div class="grid2">
+          <div class="kv"><div class="k">Monetization</div><div class="v">${esc(l.monet||'—')}</div></div>
+          <div class="kv"><div class="k">Content / Engagement</div><div class="v">${esc(l.content||'—')} / ${esc(l.engage||'—')}</div></div>
+          <div class="kv"><div class="k">Brand potential</div><div class="v">${esc(l.brand||'—')}/10</div></div>
+          <div class="kv"><div class="k">Niche potential</div><div class="v">${esc(l.nichefit||'—')}</div></div>
+          <div class="kv"><div class="k">Monetizable / Active / Approachable</div><div class="v">${esc(l.monetizable||'?')} / ${esc(l.active||'?')} / ${esc(l.approach||'?')}</div></div>
+          <div class="kv"><div class="k">Date found / contacted</div><div class="v">${esc(l.found||'—')} / ${esc(l.contacted||'—')}</div></div>
+          <div class="kv"><div class="k">Script used</div><div class="v">${esc(l.script||'—')}</div></div>
+          <div class="kv"><div class="k">Feedback</div><div class="v">Replied ${esc(l.replied||'—')} · Interested ${esc(l.interested||'—')} · Bad fit ${esc(l.badfit||'—')}</div></div>
+        </div>
+        <div class="scorebreak"><b>Score breakdown:</b> ${breakdown}</div>
+        <div class="detail-actions">
+          <button class="sm" onclick="openEdit('${l.id}')">Edit</button>
+          <button class="ghost sm" onclick="quickContact('${l.id}')">Mark messaged today</button>
+          <button class="ghost sm" onclick="snooze('${l.id}',3)">Follow-up +3d</button>
+          <button class="ghost sm" onclick="snooze('${l.id}',7)">+7d</button>
+        </div>
+      </details>
+    </div>
+    <div class="cside">
+      <button class="sm btn-igdm" onclick="openAndCopy('${l.id}')" title="Copy the DM script and open her Instagram">Open IG + Copy DM</button>
+      <select onchange="setStatus('${l.id}',this.value)">${STATUSES.map(st=>`<option ${st===l.status?'selected':''}>${st}</option>`).join('')}</select>
+      ${dueTxt?`<div class="${dueCls}">${dueTxt}</div>`:'<div class="due muted">no follow-up</div>'}
+    </div>
+  </div>`;
+}
+
+function render(){
+  computeDuplicates();
+  // populate filter dropdowns
+  syncSelect('fNiche',uniq(leads.map(l=>l.niche)));
+  syncSelect('fLocation',uniq(leads.map(l=>l.location)));
+  syncSelect('fStatus',STATUSES,true);
+
+  document.getElementById('pipeline').innerHTML=pipelineHTML();
+  document.getElementById('weeklyStats').innerHTML=weeklyHTML();
+  document.getElementById('followBanner').innerHTML=followBannerHTML();
+
+  const q=document.getElementById('search').value.toLowerCase();
+  const fN=val('fNiche'),fL=val('fLocation'),fS=val('fStatus'),fP=val('fPriority'),fE=val('fEnrich'),fRA=val('fRecAction');
+  const minF=+val('fMinFol')||0,minS=+val('fMinScore')||0;
+  const sort=val('sortBy');
+
+  let list=leads.filter(l=>{
+    const blob=[l.name,l.handle,l.niche,l.location,l.notes].join(' ').toLowerCase();
+    if(q&&!blob.includes(q))return false;
+    if(fN&&l.niche!==fN)return false;
+    if(fL&&l.location!==fL)return false;
+    if(fS&&l.status!==fS)return false;
+    if(fP&&priorityOf(l)!==fP)return false;
+    if(fE==='needs'&&!showNeedsEnrich(l))return false;
+    if(fE==='done'&&l.needsEnrichment)return false;
+    if(fRA&&recommendedAction(l).action!==fRA)return false;
+    if((+l.followers||0)<minF)return false;
+    if(leadScore(l)<minS)return false;
+    return true;
+  });
+
+  const priRank={High:0,Medium:1,Low:2};
+  list.sort((a,b)=>{
+    if(sort==='score')return leadScore(b)-leadScore(a);
+    if(sort==='followup')return (a.followup||'9999')<(b.followup||'9999')?-1:1;
+    if(sort==='found')return (b.found||'')<(a.found||'')?-1:1;
+    if(sort==='priority')return priRank[priorityOf(a)]-priRank[priorityOf(b)];
+    if(sort==='status')return STATUSES.indexOf(a.status)-STATUSES.indexOf(b.status);
+    return 0;
+  });
+
+  document.getElementById('cards').innerHTML=list.length?list.map(cardHTML).join(''):
+    `<div class="empty">No leads match. ${leads.length?'Try clearing filters.':'Add your first lead or import a CSV.'}</div>`;
+
+  renderAnalytics();
+  renderRecent();
+  renderDailyTarget();
+  renderOutreachBank();
+  save();
+  checkBackupReminder();
+}
+
+/* ---------- daily DM target counter ----------
+   Counts leads marked "Messaged" today (their `contacted` date == today).
+   Because it keys off today's date, it resets to 0/30 automatically at
+   midnight. A timer also re-renders at 12:00 AM so an open tab flips over. */
+const DAILY_DM_GOAL=30;
+function dmsToday(){const t=today();return leads.filter(l=>l.contacted===t).length;}
+function renderDailyTarget(){
+  const el=document.getElementById('dailyTarget');if(!el)return;
+  const n=dmsToday(),goal=DAILY_DM_GOAL,pct=Math.min(100,Math.round(n/goal*100));
+  document.getElementById('dtCount').textContent=n+'/'+goal;
+  document.getElementById('dtFill').style.width=pct+'%';
+  const done=n>=goal;
+  el.classList.toggle('done',done);
+  const note=document.getElementById('dtNote');
+  if(done){note.textContent='🎉 Daily target hit — '+n+' DMs sent. Keep the momentum or call it.';}
+  else{const left=goal-n;note.textContent=left+' more to hit today’s goal · counts leads marked Messaged · resets at midnight';}
+}
+/* ============================================================
+   📨  OUTREACH MEMORY BANK (part 1 — capture + storage)
+   ------------------------------------------------------------
+   When a lead is moved to "Replied", we prompt for the message
+   that earned the reply and store it as WORKING. Moving a lead
+   to "Ghosted" logs the message as NOT WORKING. Everything is
+   stored on the lead (l.outreachMsg / l.outreachOutcome) so it
+   rides existing save + backup. The Scripts tab shows the bank.
+   (The DM-script *recommendation* list is the deferred part 2.)
+   ============================================================ */
+function maybeCaptureOutreach(l,st){
+  let outcome=null;
+  if(st==='Replied')outcome='working';
+  else if(st==='Ghosted')outcome='not-working';
+  if(!outcome)return;
+  if(l.outreachMsg&&l.outreachMsg.trim()){
+    // already logged — just keep the outcome in sync, no re-prompt
+    l.outreachOutcome=outcome;save();renderOutreachBank();cloudUpsert(l);return;
+  }
+  openMsgModal(l.id,outcome);
+}
+function openMsgModal(id,outcome){
+  const l=find(id);if(!l)return;
+  document.getElementById('msg_leadId').value=id;
+  document.getElementById('msg_outcome').value=outcome;
+  document.getElementById('msg_text').value=l.outreachMsg||'';
+  document.getElementById('msgModalTitle').textContent=
+    outcome==='working'?'✓ Log the message that worked':'✕ Log the message that didn’t land';
+  document.getElementById('msgModalSub').textContent=
+    (outcome==='working'?'“'+(l.name||'This lead')+'” replied. ':'“'+(l.name||'This lead')+'” ghosted. ')+
+    'Paste the opener you sent so you can spot patterns later.';
+  document.getElementById('msgModal').classList.add('open');
+  setTimeout(()=>{document.getElementById('msg_text').focus();},50);
+}
+function closeMsgModal(){document.getElementById('msgModal').classList.remove('open');}
+function saveMsgModal(){
+  const id=document.getElementById('msg_leadId').value;
+  const outcome=document.getElementById('msg_outcome').value;
+  const text=document.getElementById('msg_text').value.trim();
+  const l=find(id);
+  if(l&&text){l.outreachMsg=text;l.outreachOutcome=outcome;l.outreachLoggedAt=today();}
+  closeMsgModal();render();if(l&&text)cloudUpsert(l);
+}
+function bankEntries(){return leads.filter(l=>l.outreachMsg&&l.outreachMsg.trim());}
+function bankItemHTML(l){
+  const oc=l.outreachOutcome==='not-working'?'notworking':'working';
+  return `<div class="bankitem ${oc}">
+    <div class="bmsg">${esc(l.outreachMsg)}</div>
+    <div class="bmeta">
+      <span class="blead">${esc(l.name||'(no name)')}</span>
+      ${l.niche?'<span>'+esc(l.niche)+'</span>':''}
+      ${l.outreachLoggedAt?'<span>'+esc(l.outreachLoggedAt)+'</span>':''}
+      <span>· ${esc(l.status)}</span>
+      <button class="ghost sm" style="margin-left:auto;padding:3px 9px" onclick="openMsgModal('${l.id}','${l.outreachOutcome||'working'}')">Edit</button>
+    </div>
+  </div>`;
+}
+function renderOutreachBank(){
+  const host=document.getElementById('bankWorking');if(!host)return;
+  const entries=bankEntries();
+  const sort=a=>a.slice().sort((x,y)=>(y.outreachLoggedAt||'')<(x.outreachLoggedAt||'')?-1:1);
+  const working=sort(entries.filter(l=>l.outreachOutcome!=='not-working'));
+  const not=sort(entries.filter(l=>l.outreachOutcome==='not-working'));
+  document.getElementById('bankWorking').innerHTML=working.length?working.map(bankItemHTML).join(''):'<div class="bankempty">No replies logged yet. Move a lead to “Replied” and paste the message that worked.</div>';
+  document.getElementById('bankNot').innerHTML=not.length?not.map(bankItemHTML).join(''):'<div class="bankempty">No misses logged yet. Move a ghosted lead to “Ghosted” to log what didn’t land.</div>';
+  document.getElementById('bankWorkingCount').textContent=working.length?'('+working.length+')':'';
+  document.getElementById('bankNotCount').textContent=not.length?'('+not.length+')':'';
+  const total=working.length+not.length;
+  const rate=total?Math.round(working.length/total*100):0;
+  const S=[['Messages logged',total],['Working',working.length],['Not working',not.length],['Response rate',rate+'%']];
+  document.getElementById('bankStats').innerHTML=S.map(([l,n])=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
+}
+
+/* Re-render right after midnight so a left-open tab rolls over to 0/30. */
+function scheduleMidnightReset(){
+  const now=new Date(),next=new Date(now);
+  next.setHours(24,0,5,0); // 00:00:05 tomorrow
+  setTimeout(()=>{render();scheduleMidnightReset();},next-now);
+}
+
+function renderAnalytics(){
+  const contacted=leads.filter(l=>CONTACTED_STATUSES.includes(l.status)||l.replied);
+  function group(keyFn,label){
+    const g={};
+    contacted.forEach(l=>{const k=keyFn(l)||'(blank)';g[k]=g[k]||{n:0,r:0};g[k].n++;if(l.replied==='Yes')g[k].r++;});
+    const rows=Object.entries(g).filter(([k])=>k!=='(blank)'||Object.keys(g).length===1)
+      .map(([k,v])=>({k,n:v.n,r:v.r,rate:v.n?Math.round(v.r/v.n*100):0}))
+      .sort((a,b)=>b.rate-a.rate||b.n-a.n);
+    if(!rows.length)return `<div><h3>${label}</h3><p class="muted" style="font-size:12px">No contacted leads yet.</p></div>`;
+    return `<div><h3>${label}</h3><table><tr><th>${label}</th><th>Sent</th><th>Replied</th><th>Reply rate</th></tr>`+
+      rows.map(r=>`<tr><td>${esc(r.k)}</td><td>${r.n}</td><td>${r.r}</td><td><span class="bar" style="width:${Math.max(2,r.rate*0.6)}px"></span>${r.rate}%</td></tr>`).join('')+`</table></div>`;
+  }
+  const folBand=l=>{const f=+l.followers||0;if(f<5000)return '<5k';if(f<20000)return '5k–20k';if(f<50000)return '20k–50k';if(f<100000)return '50k–100k';if(f<250000)return '100k–250k';return '250k+';};
+  const scoreBand=l=>{const s=leadScore(l);return s>=80?'80–100 (High)':s>=50?'50–79 (Med)':'<50 (Low)';};
+  document.getElementById('analytics').innerHTML=
+    group(l=>l.niche,'Niche')+
+    group(folBand,'Follower range')+
+    group(l=>l.script,'Script')+
+    group(l=>l.location,'Location')+
+    group(scoreBand,'Priority / score band')+
+    group(l=>l.monet,'Monetization');
+}
+
+/* ---------- select sync helpers ---------- */
+function val(id){return document.getElementById(id).value;}
+function syncSelect(id,opts,keepAll){
+  const el=document.getElementById(id),cur=el.value;
+  const base=`<option value="">All</option>`;
+  el.innerHTML=base+opts.map(o=>`<option ${o===cur?'selected':''}>${esc(o)}</option>`).join('');
+  if([...el.options].some(o=>o.value===cur))el.value=cur;
+}
+
+/* ---------- quick actions ---------- */
+function find(id){return leads.find(l=>l.id===id);}
+
+/* ---------- duplicate detection (by @handle) ----------
+   Normalises a lead down to a bare lowercase handle from its link or name,
+   so the same creator can't be silently added twice — important once a VA is
+   also entering leads. */
+function leadHandle(l){
+  if(!l)return '';
+  if(l.handle)return String(l.handle).toLowerCase().replace(/^@/,'');
+  if(l.link){const m=String(l.link).match(/\.com\/@?([A-Za-z0-9._]+)/i);if(m&&!/^(p|reel|reels|explore|stories|tv)$/i.test(m[1]))return m[1].toLowerCase();}
+  if(l.name){const m=String(l.name).match(/@?([A-Za-z0-9._]{2,30})/);if(m)return m[1].toLowerCase();}
+  return '';
+}
+function findDuplicate(handle,excludeId){
+  handle=(handle||'').toLowerCase().replace(/^@/,'');
+  if(!handle)return null;
+  return leads.find(l=>l.id!==excludeId&&leadHandle(l)===handle)||null;
+}
+// Handles that appear on more than one lead (e.g. from older CSV imports) — used
+// to surface a "duplicate" tag on cards so you can clean them up.
+let DUP_HANDLES=new Set();
+function computeDuplicates(){
+  const seen={};DUP_HANDLES=new Set();
+  leads.forEach(l=>{const h=leadHandle(l);if(!h)return;seen[h]=(seen[h]||0)+1;if(seen[h]>1)DUP_HANDLES.add(h);});
+}
+
+/* ---------- one-tap: open her IG + copy the DM script ----------
+   Copies the filled DM to the clipboard AND opens her profile so you can tap
+   Message — the tight outreach loop in one tap. (Instagram has no public
+   direct-to-DM web link, so this opens the profile, where you hit Message.) */
+function openAndCopy(id){
+  const l=find(id);if(!l)return;
+  const text=fillDM(loadDMTemplate(),l.name||'@there');
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).catch(()=>fallbackCopy(text,()=>{}));}
+    else{fallbackCopy(text,()=>{});}
+  }catch(e){fallbackCopy(text,()=>{});}
+  let url=l.link;
+  if(!url){const h=leadHandle(l);if(h)url='https://instagram.com/'+h;}
+  if(url){window.open(url,'_blank','noopener');}
+}
+function setStatus(id,st){const l=find(id);if(!l)return;l.status=st;if(CONTACTED_STATUSES.includes(st)&&!l.contacted)l.contacted=today();render();cloudUpsert(l);maybeCaptureOutreach(l,st);}
+function quickContact(id){const l=find(id);if(!l)return;l.contacted=today();if(l.status==='Found')l.status='Messaged';if(!l.followup)l.followup=new Date(Date.now()+3*86400000).toISOString().slice(0,10);render();cloudUpsert(l);}
+function snooze(id,days){const l=find(id);if(!l)return;l.followup=new Date(Date.now()+days*86400000).toISOString().slice(0,10);if(l.status==='Found'||l.status==='Messaged')l.status='Follow-up';render();cloudUpsert(l);}
+function clearFilters(){['search','fNiche','fLocation','fStatus','fPriority','fEnrich','fRecAction','fMinFol','fMinScore'].forEach(i=>document.getElementById(i).value='');render();}
+
+/* ---------- modal ---------- */
+const F=['name','link','location','niche','followers','hasof','monet','content','engage','brand','nichefit','monetizable','active','approach','status','priority','found','contacted','followup','script','notes','replied','interested','badfit','fbnotes'];
+function openAdd(){
+  F.forEach(f=>{const el=document.getElementById('fld_'+f);if(el)el.value=el.tagName==='SELECT'?el.options[0].value:'';});
+  document.getElementById('fld_id').value='';
+  document.getElementById('fld_found').value=today();
+  document.getElementById('fld_brand').value=5;
+  document.getElementById('fld_needsEnrich').checked=false;
+  document.getElementById('modalTitle').textContent='Add Lead';
+  document.getElementById('delBtn').style.display='none';
+  document.getElementById('modal').classList.add('open');
+}
+function openEdit(id){
+  const l=find(id);if(!l)return;
+  document.getElementById('fld_id').value=l.id;
+  F.forEach(f=>{const el=document.getElementById('fld_'+f);if(el)el.value=(l[f]==null?'':l[f]);});
+  document.getElementById('fld_needsEnrich').checked=!!l.needsEnrichment;
+  document.getElementById('modalTitle').textContent='Edit Lead — '+(l.name||'');
+  document.getElementById('delBtn').style.display='inline-block';
+  document.getElementById('modal').classList.add('open');
+}
+// Auto-clear the "Needs enrichment" flag the moment a VA actually fills in an
+// enrichment field. Programmatic value-setting in openEdit/openAdd does NOT fire
+// these events, so loading a lead never trips it — only real user edits do.
+function markEnriched(){
+  const cb=document.getElementById('fld_needsEnrich');
+  if(cb&&cb.checked)cb.checked=false;
+}
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+function saveLead(){
+  const id=document.getElementById('fld_id').value;
+  const name=document.getElementById('fld_name').value.trim();
+  if(!name){alert('Name / handle is required.');return;}
+  // Duplicate guard (only when adding new). Modal allows an explicit override.
+  if(!id){
+    const link=document.getElementById('fld_link').value;
+    const h=leadHandle({name,link});
+    const dup=findDuplicate(h);
+    if(dup&&!confirm(`"${dup.name||h}" is already a lead (${dup.status}). Add a second copy anyway?`))return;
+  }
+  let l=id?find(id):{id:uid()};
+  F.forEach(f=>{const el=document.getElementById('fld_'+f);if(el)l[f]=el.value;});
+  l.needsEnrichment=document.getElementById('fld_needsEnrich').checked;
+  if(!id)leads.unshift(l);
+  closeModal();render();cloudUpsert(l);
+}
+function deleteLead(){
+  const id=document.getElementById('fld_id').value;
+  if(id&&confirm('Delete this lead?')){leads=leads.filter(l=>l.id!==id);closeModal();render();cloudDelete(id);}
+}
+
+/* ============================================================
+   QUICK ADD — mobile-first inline capture
+   ============================================================ */
+// Turn whatever was pasted (a @handle, a full IG/profile URL, OR a whole
+// pasted profile header) into a display name + a working link, so the card's
+// "link ↗" works either way. Tolerant of extra surrounding text.
+function parseHandle(raw){
+  raw=(raw||'').trim();
+  if(!raw)return{name:'',link:''};
+  // 1) A full social URL appearing anywhere in the pasted text
+  const urlm=raw.match(/(?:https?:\/\/)?(?:www\.)?(instagram|tiktok|fansly|onlyfans|twitter|x)\.com\/(?:#!\/)?@?([A-Za-z0-9._]+)/i);
+  if(urlm){
+    const dom=urlm[1].toLowerCase();
+    const handle=urlm[2];
+    if(/^(p|reel|reels|explore|stories|tv)$/i.test(handle)){
+      return{name:(raw.split(/[\s\n]/)[0]||raw),link:'https://'+dom+'.com',handle:''};
+    }
+    return{name:'@'+handle,link:'https://'+dom+'.com/'+handle,handle:handle};
+  }
+  // 2) An @handle appearing anywhere in the text
+  const atm=raw.match(/@([A-Za-z0-9._]{2,30})/);
+  if(atm){const h=atm[1];return{name:'@'+h,link:'https://instagram.com/'+h,handle:h};}
+  // 3) Fallback: the leading token of the first line looks like a username
+  const first=(raw.split(/\n/)[0]||'').trim().replace(/^@/,'');
+  const fm=first.match(/^([A-Za-z0-9._]{2,30})\b/);
+  if(fm){const h=fm[1];return{name:'@'+h,link:'https://instagram.com/'+h,handle:h};}
+  return{name:raw,link:'',handle:''};
+}
+
+// Pull a follower count out of pasted profile text, e.g.
+// "8,547 followers", "8.5K followers", "1.2M followers".
+function parseFollowers(raw){
+  if(!raw)return null;
+  const m=raw.match(/([\d][\d.,]*)\s*([KkMm])?\s*followers/i);
+  if(!m)return null;
+  let n=parseFloat(m[1].replace(/,/g,''));
+  if(isNaN(n))return null;
+  const suf=(m[2]||'').toLowerCase();
+  if(suf==='k')n=n*1e3; else if(suf==='m')n=n*1e6;
+  return Math.round(n);
+}
+function qv(id){return document.getElementById(id).value;}
+
+// Live auto-fill name + IG link as Shane pastes/types the handle field
+function onIgInput(){
+  const raw=qv('iqa_handle');
+  const {name,link}=parseHandle(raw);
+  document.getElementById('iqa_name').value=name;
+  document.getElementById('iqa_link').value=link;
+  // If the pasted text included a follower count (e.g. "8,547 followers"),
+  // auto-fill it so a single paste of the profile header captures it too.
+  const fol=parseFollowers(raw);
+  if(fol!=null)document.getElementById('iqa_followers').value=fol;
+  // Tidy the paste field down to the clean link once a header blob is pasted.
+  if(fol!=null&&link&&/[\n]|followers/i.test(raw))document.getElementById('iqa_handle').value=link;
+  let prev=link?('→ '+link):'';
+  if(fol!=null)prev+=(prev?'   ·   ':'')+'✓ '+fol.toLocaleString()+' followers added';
+  document.getElementById('iqa_linkPreview').textContent=prev;
+  // Live duplicate check — warn before he even hits save.
+  const dupMsg=document.getElementById('iqaMsg');
+  const dup=findDuplicate(parseHandle(raw).handle||name);
+  if(dup){dupMsg.style.color='var(--warn)';dupMsg.innerHTML='⚠ '+esc(dup.name||'This handle')+' is already a lead ('+esc(dup.status)+(dup.found?', added '+esc(dup.found):'')+'). <a href="#" onclick="jumpToLead(\''+dup.id+'\');return false;">Open it ↗</a>';}
+  else if(dupMsg.innerHTML.indexOf('already a lead')>-1){dupMsg.textContent='';}
+}
+// Jump from a duplicate warning straight to the existing lead's editor.
+function jumpToLead(id){openEdit(id);}
+
+// Segmented control wiring — each .seg sets a hidden input + toggles .on
+function initSegs(){
+  document.querySelectorAll('.seg').forEach(seg=>{
+    const target=seg.dataset.target;
+    seg.querySelectorAll('button').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        seg.querySelectorAll('button').forEach(b=>b.classList.remove('on'));
+        btn.classList.add('on');
+        if(target)document.getElementById(target).value=btn.dataset.val;
+      });
+    });
+  });
+}
+function setSeg(segId,value){
+  const seg=document.getElementById(segId);if(!seg)return;
+  seg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.val===value));
+  if(seg.dataset.target)document.getElementById(seg.dataset.target).value=value;
+}
+
+function clearInlineQuick(focus){
+  ['iqa_handle','iqa_name','iqa_link','iqa_followers','iqa_location','iqa_niche','iqa_notes'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('iqa_linkPreview').textContent='';
+  document.getElementById('iqa_brand').value=5;
+  document.getElementById('iqa_brandVal').textContent='5';
+  setSeg('iqa_hasof_seg','Unknown');
+  setSeg('iqa_content_seg','Medium');
+  setSeg('iqa_priority_seg','');
+  if(focus)setTimeout(()=>document.getElementById('iqa_handle').focus(),30);
+}
+
+// mode: 'save' = Save Only (status Found) · 'messaged' = Save + Mark as Messaged
+function saveInlineQuick(mode){
+  // make sure the link is derived even if the paste field is the only thing filled
+  if(!qv('iqa_name')||!qv('iqa_link'))onIgInput();
+  const name=qv('iqa_name').trim()||parseHandle(qv('iqa_handle')).name;
+  const link=qv('iqa_link').trim()||parseHandle(qv('iqa_handle')).link;
+  const followers=qv('iqa_followers').trim();
+  const location=qv('iqa_location').trim();
+  const niche=qv('iqa_niche').trim();
+  const notes=qv('iqa_notes').trim();
+  // Only the handle is required to save — everything else is enrichment.
+  const m=document.getElementById('iqaMsg');
+  if(!name||!link){m.style.color='var(--lo)';m.textContent='Paste an Instagram link or @handle to save.';return;}
+  // Block duplicates by @handle so the same creator isn't entered twice.
+  const dup=findDuplicate(parseHandle(qv('iqa_handle')).handle||name);
+  if(dup){m.style.color='var(--warn)';m.innerHTML='⚠ Not saved — '+esc(dup.name||'this handle')+' is already a lead ('+esc(dup.status)+'). <a href="#" onclick="jumpToLead(\''+dup.id+'\');return false;">Open it ↗</a>';return;}
+  const status=mode==='messaged'?'Messaged':'Found';
+  const l={
+    id:uid(), name, link, niche, location, notes,
+    followers,
+    hasof:qv('iqa_hasof')||'Unknown',
+    content:qv('iqa_content')||'Medium',
+    brand:+qv('iqa_brand')||5,
+    priority:qv('iqa_priority')||'',
+    status,
+    found:today(),
+    contacted:status==='Messaged'?today():'',
+    // Marking Messaged auto-schedules a follow-up so the banner just works.
+    followup:status==='Messaged'?addDays(today(),QUICK_FOLLOWUP_DAYS):'',
+    needsEnrichment:true,
+  };
+  leads.unshift(l);
+  render();cloudUpsert(l);
+  m.style.color='var(--good)';
+  m.textContent='✓ Saved '+name+(mode==='messaged'?(' — Messaged, follow-up in '+QUICK_FOLLOWUP_DAYS+'d'):'')+'. Next one…';
+  clearInlineQuick(true);
+  setTimeout(()=>{if(m.textContent.startsWith('✓'))m.textContent='';},4000);
+}
+
+/* ---------- DM script template ---------- */
+const DM_KEY='elevateAngelDM_v1';
+const DEFAULT_DM=`Hey {name} — your content genuinely stood out to me, the vibe is really dialed in.\n\nI run a small creator agency (Elevate Angel) where we help a handful of women turn their organic following into a real, premium subscription business — strategy, content systems, and growth done properly, not spammy.\n\nNo pressure at all, but I'd love to put together a free quick audit of your page if you're open to it. Worth a look?`;
+function loadDMTemplate(){return lsGet(DM_KEY)||DEFAULT_DM;}
+function saveDMTemplate(){lsSet(DM_KEY,document.getElementById('dmTemplate').value);}
+function resetDMTemplate(){document.getElementById('dmTemplate').value=DEFAULT_DM;lsSet(DM_KEY,DEFAULT_DM);}
+function fillDM(tpl,name){
+  const handle=(name||'').replace(/^@/,'');
+  const firstName=handle.split(/[._]/)[0]||'there';
+  return tpl.replace(/\{name\}/g,'@'+handle).replace(/\{handle\}/g,handle).replace(/\{first\}/g,firstName);
+}
+function copyDM(){
+  if(!qv('iqa_name'))onIgInput();
+  const name=qv('iqa_name').trim()||'@there';
+  const text=fillDM(loadDMTemplate(),name);
+  const m=document.getElementById('iqaMsg');
+  const done=ok=>{m.style.color=ok?'var(--good)':'var(--lo)';m.textContent=ok?('📋 DM copied for '+name+' — paste into Instagram'):'Copy failed — long-press the script box to copy manually';setTimeout(()=>{if(m.textContent.startsWith('📋'))m.textContent='';},4000);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>done(true)).catch(()=>fallbackCopy(text,done));
+  }else{fallbackCopy(text,done);}
+}
+function fallbackCopy(text,done){
+  try{const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();const ok=document.execCommand('copy');document.body.removeChild(ta);done(ok);}catch(e){done(false);}
+}
+
+/* ---------- recently added ---------- */
+function renderRecent(){
+  const el=document.getElementById('recentList');if(!el)return;
+  const recent=leads.slice(0,10);
+  if(!recent.length){el.innerHTML='<div class="empty" style="padding:20px">No leads yet — add your first one above.</div>';return;}
+  el.innerHTML=recent.map(l=>{
+    const pri=priorityOf(l);
+    return `<div class="ritem">
+      <div class="rmain">
+        <div class="rh">${esc(l.name||'(no name)')}</div>
+        <div class="rmeta">
+          ${l.niche?'<span>'+esc(l.niche)+'</span>':''}
+          <span class="tag pri-${pri}" style="padding:1px 8px">${pri}</span>
+          <span class="tag st" style="padding:1px 8px">${esc(l.status)}</span>
+          ${showNeedsEnrich(l)?'<span class="tag enrich" style="padding:1px 8px">⚠ enrich</span>':''}
+        </div>
+      </div>
+      <button class="ghost sm redit" onclick="openEdit('${l.id}')">Edit</button>
+    </div>`;
+  }).join('');
+}
+
+/* ---------- tabs ---------- */
+function showTab(which){
+  document.querySelectorAll('.tabpanel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tabbar button').forEach(b=>b.classList.remove('active'));
+  const panel=document.getElementById('tab-'+which);
+  const btn=document.getElementById('tabBtn-'+which);
+  if(panel)panel.classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(which==='quickadd')setTimeout(()=>{const h=document.getElementById('iqa_handle');if(h&&!h.value)h.focus();},40);
+  if(which==='scripts')renderOutreachBank();
+  try{window.scrollTo(0,0);}catch(e){}
+}
+
+/* ---------- CSV ---------- */
+function exportCSV(){
+  const cols=F.slice();
+  const head=cols.join(',');
+  const rows=leads.map(l=>cols.map(c=>csvCell(l[c])).join(','));
+  rows.unshift(head);
+  download('elevate-angel-leads.csv',rows.join('\n'));
+}
+function csvCell(v){v=v==null?'':String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+function download(name,text){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'text/csv'}));a.download=name;a.click();}
+function importCSV(e){
+  const file=e.target.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const rows=parseCSV(ev.target.result);
+      if(rows.length<2){alert('CSV looks empty.');return;}
+      const head=rows[0].map(h=>h.trim().toLowerCase());
+      const map={'name':'name','handle':'name','name / handle':'name','platform link':'link','link':'link','url':'link','location':'location','follower count':'followers','followers':'followers','niche':'niche','niche / vibe':'niche','vibe':'niche','has of/fansly?':'hasof','has of':'hasof','monetization':'monet','current monetization':'monet','content quality':'content','brand potential':'brand','engagement quality':'engage','date found':'found','date contacted':'contacted','script used':'script','status':'status','follow-up date':'followup','priority':'priority','notes':'notes'};
+      let added=0;
+      for(let i=1;i<rows.length;i++){
+        const cells=rows[i];if(!cells.join('').trim())continue;
+        const l={id:uid(),status:'Found',found:today()};
+        head.forEach((h,idx)=>{const key=map[h]||(F.includes(h)?h:null);if(key)l[key]=cells[idx];});
+        if(!l.name)continue;
+        leads.unshift(l);added++;
+      }
+      render();cloudBulk(leads);alert('Imported '+added+' lead'+(added===1?'':'s')+'.');
+    }catch(err){alert('Could not parse CSV: '+err.message);}
+    e.target.value='';
+  };
+  r.readAsText(file);
+}
+function parseCSV(text){
+  const rows=[];let row=[],cell='',q=false;
+  for(let i=0;i<text.length;i++){const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){cell+='"';i++;}else q=false;}else cell+=c;}
+    else{if(c==='"')q=true;else if(c===','){row.push(cell);cell='';}else if(c==='\n'){row.push(cell);rows.push(row);row=[];cell='';}else if(c==='\r'){}else cell+=c;}
+  }
+  if(cell.length||row.length){row.push(cell);rows.push(row);}
+  return rows;
+}
+
+/* ---------- seed ---------- */
+function seed(){
+  const t=today();
+  const ago=d=>new Date(Date.now()-d*86400000).toISOString().slice(0,10);
+  leads=[
+    {id:uid(),name:'@luna.fit.sample',link:'https://instagram.com/example',location:'Miami, FL',niche:'fitness',followers:84000,hasof:'No',monet:'Brand deals',content:'High',engage:'High',brand:9,nichefit:'High',monetizable:'Yes',active:'Yes',approach:'Yes',status:'Replied',priority:'',found:ago(6),contacted:ago(4),followup:t,script:'Script A — warm intro',notes:'Strong gym content, very engaged comments. Open to collabs.',replied:'Yes',interested:'Yes',badfit:'No',fbnotes:'Liked the warm intro, asked about splits.'},
+    {id:uid(),name:'@sol.cosplays.sample',link:'https://instagram.com/example',location:'Los Angeles, CA',niche:'cosplay',followers:46000,hasof:'Yes',monet:'OF',content:'High',engage:'Medium',brand:8,nichefit:'High',monetizable:'Yes',active:'Yes',approach:'Medium'==='Medium'?'Unknown':'',status:'Messaged',priority:'',found:ago(3),contacted:ago(2),followup:ago(-2),script:'Script B — value first',notes:'Already monetizing on OF, could scale with management.',replied:'No',interested:'—',badfit:'—',fbnotes:''},
+    {id:uid(),name:'@maya.alt.sample',link:'https://instagram.com/example',location:'Austin, TX',niche:'alt / tattoo',followers:12500,hasof:'Unknown',monet:'Unknown',content:'Medium',engage:'High',brand:6,nichefit:'Medium',monetizable:'Yes',active:'Yes',approach:'Yes',status:'Found',priority:'',found:ago(1),contacted:'',followup:'',script:'',notes:'Growing fast, aesthetic fits brand. No OF yet — good greenfield.',replied:'—',interested:'—',badfit:'—',fbnotes:''},
+    {id:uid(),name:'@ivy.travel.sample',link:'https://instagram.com/example',location:'London, UK',niche:'travel / lifestyle',followers:210000,hasof:'No',monet:'Brand deals',content:'High',engage:'Low',brand:7,nichefit:'Low',monetizable:'No',active:'Yes',approach:'No',status:'Not Fit',priority:'',found:ago(8),contacted:'',followup:'',script:'',notes:'Big but low engagement and not aligned with niche/location targets.',replied:'—',interested:'—',badfit:'Yes',fbnotes:'Out of niche.'},
+    {id:uid(),name:'@bella.gamer.sample',link:'https://instagram.com/example',location:'Chicago, IL',niche:'gaming',followers:33000,hasof:'No',monet:'None',content:'Medium',engage:'High',brand:7,nichefit:'Medium',monetizable:'Yes',active:'Yes',approach:'Yes',status:'Follow-up',priority:'',found:ago(5),contacted:ago(3),followup:ago(1),script:'Script A — warm intro',notes:'Replied warm once then went quiet. Worth one more nudge.',replied:'Yes',interested:'Yes',badfit:'No',fbnotes:'Warm but slow to respond.'}
+  ];
+  save();
+}
+
+/* ---------- boot ----------
+   Wrapped so a single failure (e.g. iOS storage SecurityError) can never leave
+   the page in a broken, tab-less state. Each step is independently guarded. */
+function boot(){
+  try{ if(!lsGet(KEY)){seed();} }catch(e){}
+
+  try{ document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal();}); }catch(e){}
+
+  // segmented controls + DM template
+  try{ initSegs(); }catch(e){}
+  try{ document.getElementById('dmTemplate').value=loadDMTemplate(); }catch(e){}
+
+  // default tab: Quick Add on phones, Pipeline on desktop
+  let isMobile=true;
+  try{ isMobile=window.matchMedia('(max-width:760px)').matches; }catch(e){}
+  try{ showTab(isMobile?'quickadd':'pipeline'); }catch(e){}
+
+  try{ initZone(); }catch(e){}
+  try{ render(); }catch(e){}
+  try{ scheduleMidnightReset(); }catch(e){}
+  // Cloud mode: show the login gate and sync once signed in. No-op when the
+  // Supabase config block at the top is left blank (the app stays fully local).
+  try{ if(CLOUD) initCloudAuth(); }catch(e){ console.warn('cloud init failed',e); }
+
+  // PWA service worker — only over http/https (skipped on file://, won't error)
+  try{
+    if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+      window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});
+    }
+  }catch(e){}
+}
+boot();
+</script>
+</body>
+</html>
