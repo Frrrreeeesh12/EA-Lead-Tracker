@@ -252,6 +252,13 @@
   .btn-glow:active{box-shadow:0 0 11px rgba(40,186,198,.34);transform:translateY(1px)}
   @media (prefers-reduced-motion:reduce){.btn-glow{transition:none}.btn-glow:active{transform:none}}
   .qa-inline-msg{font-size:13px;color:var(--good);min-height:18px;text-align:center;font-weight:600}
+  /* phone-only capture helpers — hidden on desktop so that flow is unchanged */
+  .qa-mobile{display:none}
+  .btn-paste{width:100%;background:var(--panel2);color:var(--txt);border:1px solid var(--accent);font-weight:600;padding:14px;border-radius:11px}
+  @media(max-width:760px){
+    .qa-mobile{display:block;margin:-2px 0 16px}
+    .field-followers-detail{display:none}
+  }
 
   /* ============ recently added ============ */
   .recent{margin-top:8px}
@@ -346,6 +353,17 @@
       <input type="hidden" id="iqa_name">
       <input type="hidden" id="iqa_link">
 
+      <!-- PHONE-ONLY capture helpers (hidden on desktop; desktop flow is unchanged).
+           On mobile you can't copy the IG header text, so: tap Paste Link to pull the
+           copied profile link in, then type her follower count here. -->
+      <div class="qa-mobile">
+        <button type="button" class="btn-paste" onclick="pasteLink()">📋 Paste Link</button>
+        <div class="field" style="margin-top:14px">
+          <label>Follower count <span class="muted" style="font-weight:400">(type it from her profile)</span></label>
+          <input id="iqa_followers_m" type="number" inputmode="numeric" placeholder="e.g. 8500" oninput="document.getElementById('iqa_followers').value=this.value">
+        </div>
+      </div>
+
       <div class="field">
         <label>Priority</label>
         <div class="seg pri" id="iqa_priority_seg" data-target="iqa_priority">
@@ -365,7 +383,7 @@
       <details class="qa-opt" id="qaMore">
         <summary>+ Add detail <span class="muted" style="font-weight:400">(optional — enrich later)</span></summary>
 
-        <div class="field">
+        <div class="field field-followers-detail">
           <label>Follower count <span class="muted" style="font-weight:400">(auto-fills from a pasted header)</span></label>
           <input id="iqa_followers" type="number" inputmode="numeric" placeholder="e.g. 8500">
         </div>
@@ -672,11 +690,14 @@ async function cloudDelete(id){
 function isSampleLead(l){return !!(l && /\.sample$/i.test(l.name||''));}
 /* Push many leads at once (imports + migration). Sample/demo rows are stripped. */
 async function cloudBulk(arr){
-  if(!CLOUD||!cloudUser||!arr)return;
+  if(!CLOUD||!cloudUser||!arr)return {error:null,count:0};
   const clean=arr.filter(l=>l && !isSampleLead(l));
-  if(!clean.length)return;
-  try{ await sb.from('leads').upsert(clean.map(l=>({id:l.id,data:l,owner:cloudUser.id,updated_at:new Date().toISOString()})),{onConflict:'id'}); }
-  catch(e){ console.warn('cloudBulk failed',e); }
+  if(!clean.length)return {error:null,count:0};
+  try{
+    const {error}=await sb.from('leads').upsert(clean.map(l=>({id:l.id,data:l,owner:cloudUser.id,updated_at:new Date().toISOString()})),{onConflict:'id'});
+    if(error)console.warn('cloudBulk error',error);
+    return {error,count:clean.length};
+  }catch(e){ console.warn('cloudBulk failed',e); return {error:e,count:0}; }
 }
 /* Pull the full lead list down and render. Self-healing:
    - any sample/demo rows found in the cloud are deleted (cleanup of old pollution);
@@ -706,11 +727,15 @@ async function cloudLoad(){
 }
 /* Manual recovery: force-push this device's real leads to the cloud. */
 async function syncLocalToCloud(){
-  if(!CLOUD||!cloudUser)return;
+  if(!CLOUD||!cloudUser){ alert('Not signed in.'); return; }
   const localReal=(leads||[]).filter(l=>!isSampleLead(l));
   if(!localReal.length){ alert('No real leads on this device to sync.'); return; }
-  await cloudBulk(localReal);
-  alert('Pushed '+localReal.length+' lead'+(localReal.length===1?'':'s')+' to the cloud.');
+  const {error,count}=await cloudBulk(localReal);
+  if(error){
+    alert('CLOUD WRITE ERROR — copy this to Claude:\n\nmessage: '+(error.message||'(none)')+'\ncode: '+(error.code||'(none)')+'\ndetails: '+(error.details||'(none)')+'\nhint: '+(error.hint||'(none)'));
+    return;
+  }
+  alert('Pushed '+count+' lead'+(count===1?'':'s')+' to the cloud. Now refresh the Table Editor.');
   cloudLoad();
 }
 /* Live updates: refetch (debounced) whenever any device changes the table. */
@@ -1476,6 +1501,22 @@ function onIgInput(){
 // Jump from a duplicate warning straight to the existing lead's editor.
 function jumpToLead(id){openEdit(id);}
 
+// PHONE-ONLY: one-tap pull the copied Instagram link from the clipboard into the
+// paste field, then parse it (handle/link auto-fill). Falls back to focusing the
+// field for a manual long-press paste if the browser blocks clipboard reads.
+async function pasteLink(){
+  const f=document.getElementById('iqa_handle');
+  try{
+    const t=await navigator.clipboard.readText();
+    if(t&&t.trim()){ f.value=t.trim(); onIgInput(); f.blur(); }
+    else { f.focus(); }
+  }catch(e){
+    f.focus();
+    const m=document.getElementById('iqaMsg');
+    if(m){ m.style.color='var(--muted)'; m.textContent='Tap and hold the box above, then choose Paste.'; }
+  }
+}
+
 // Segmented control wiring — each .seg sets a hidden input + toggles .on
 function initSegs(){
   document.querySelectorAll('.seg').forEach(seg=>{
@@ -1496,7 +1537,7 @@ function setSeg(segId,value){
 }
 
 function clearInlineQuick(focus){
-  ['iqa_handle','iqa_name','iqa_link','iqa_followers','iqa_location','iqa_niche','iqa_notes'].forEach(i=>document.getElementById(i).value='');
+  ['iqa_handle','iqa_name','iqa_link','iqa_followers','iqa_followers_m','iqa_location','iqa_niche','iqa_notes'].forEach(i=>{const el=document.getElementById(i);if(el)el.value='';});
   document.getElementById('iqa_linkPreview').textContent='';
   document.getElementById('iqa_brand').value=5;
   document.getElementById('iqa_brandVal').textContent='5';
