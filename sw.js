@@ -1,7 +1,9 @@
 /* Elevate Angel Lead Tracker — service worker
-   Caches the app shell so it loads offline once installed to the home screen.
-   Only registered when served over http/https (not file://). */
-const CACHE = 'ea-tracker-v2';
+   Caches ONLY the app shell (same-origin static files) so the app loads offline.
+   It must NEVER cache cross-origin requests (the Supabase database API, fonts,
+   CDN) — doing so served stale lead data. Cross-origin requests are left alone
+   and always hit the network. The app HTML is network-first so new deploys show. */
+const CACHE = 'ea-tracker-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -24,12 +26,16 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET') return;
+  const req = e.request;
+  if (req.method !== 'GET') return;                  // never touch writes (POST/PATCH/DELETE)
+  const url = new URL(req.url);
+  if (url.origin !== location.origin) return;        // ignore Supabase / fonts / CDN — always live from network
+  // Same-origin app shell: network-first so updates land, cache as offline fallback.
   e.respondWith(
-    caches.match(e.request).then(hit => hit || fetch(e.request).then(res => {
+    fetch(req).then(res => {
       const copy = res.clone();
-      caches.open(CACHE).then(c => c.put(e.request, copy)).catch(() => {});
+      caches.open(CACHE).then(c => c.put(req, copy)).catch(() => {});
       return res;
-    }).catch(() => caches.match('./index.html')))
+    }).catch(() => caches.match(req).then(hit => hit || caches.match('./index.html')))
   );
 });

@@ -751,6 +751,17 @@ function cloudSubscribe(){
       .subscribe();
   }catch(e){ console.warn('realtime subscribe failed',e); }
 }
+/* Reliable backstop for live updates: realtime can be flaky (esp. on mobile), so
+   also refetch every 20s while the app is visible, and immediately whenever the
+   app regains focus (you switch back to it). Skipped while a modal is open. */
+let _pollStarted=false;
+function startCloudPolling(){
+  if(!CLOUD||_pollStarted)return; _pollStarted=true;
+  const refresh=()=>{ if(cloudUser && document.visibilityState==='visible' && !document.querySelector('.modal-bg.open')) cloudLoad(); };
+  setInterval(refresh,20000);
+  document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') refresh(); });
+  window.addEventListener('focus',refresh);
+}
 
 /* ---------- auth (cloud mode only) ---------- */
 let _signUpMode=false;
@@ -790,6 +801,7 @@ function initCloudAuth(){
       try{ updateStatus(); render(); }catch(e){}   // repaint immediately so the
       cloudLoad();                                  // status line + Sync button show
       if(!_cloudSubscribed){ cloudSubscribe(); _cloudSubscribed=true; }   // even before the
+      startCloudPolling();                          // 20s + on-focus refresh backstop
     }else{                                          // network load finishes
       cloudUser=null; showAuthGate(true); try{ updateStatus(); }catch(e){}
     }
